@@ -4,24 +4,6 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>words-editor | 多文體文章寫作</title>
-    <!-- Tailwind via CDN for demo UI (prototype style, matches 寫作速度模板表.html) -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-      // Tailwind config for consistent look with prototype
-      document.addEventListener('DOMContentLoaded', () => {
-        if (window.tailwind) {
-          window.tailwind.config = {
-            theme: {
-              extend: {
-                fontFamily: {
-                  'noto': ['Noto Sans TC', 'system-ui', 'sans-serif']
-                }
-              }
-            }
-          };
-        }
-      });
-    </script>
   </head>
   <body class="bg-slate-50">
     <div id="root"></div>

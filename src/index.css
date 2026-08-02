@@ -1,7 +1,7 @@
-/* Tailwind directives removed for build compatibility.
-   Demo UI uses Tailwind via CDN (https://cdn.tailwindcss.com) loaded in index.html.
-   All utility classes in App.tsx will work at runtime in dev.
-   Custom styles below are preserved from prototype. */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 :root {
   --primary: #2563eb;
 }

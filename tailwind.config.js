@@ -7,8 +7,8 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        'sans-tc': ['Noto Sans TC', 'Inter', 'system-ui', '-apple-system', 'sans-serif'],
-      }
+        'sans-tc': ['Noto Sans TC', 'Inter', 'system-ui', 'sans-serif'],
+      },
     },
   },
   plugins: [],
