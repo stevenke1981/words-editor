@@ -5,6 +5,9 @@ export interface ApiSettings {
   provider: Provider;
   deepseekKey: string;
   openrouterKey: string;
+  qwenKey: string;
+  sakanaKey: string;
+  geminiKey: string;
   modelName: string;
 }
 
@@ -15,6 +18,9 @@ function loadApiSettings(): ApiSettings {
     provider: 'deepseek',
     deepseekKey: '',
     openrouterKey: '',
+    qwenKey: '',
+    sakanaKey: '',
+    geminiKey: '',
     modelName: '',
   };
   try {
@@ -25,6 +31,9 @@ function loadApiSettings(): ApiSettings {
         provider: s.provider || defaults.provider,
         deepseekKey: typeof s.deepseekKey === 'string' ? s.deepseekKey : '',
         openrouterKey: typeof s.openrouterKey === 'string' ? s.openrouterKey : '',
+        qwenKey: typeof s.qwenKey === 'string' ? s.qwenKey : '',
+        sakanaKey: typeof s.sakanaKey === 'string' ? s.sakanaKey : '',
+        geminiKey: typeof s.geminiKey === 'string' ? s.geminiKey : '',
         modelName: typeof s.modelName === 'string' ? s.modelName : '',
       };
     }
@@ -56,6 +65,9 @@ export function useAgentPipeline() {
       provider: 'deepseek',
       deepseekKey: '',
       openrouterKey: '',
+      qwenKey: '',
+      sakanaKey: '',
+      geminiKey: '',
       modelName: '',
     };
     setSettings(defaults);
@@ -64,9 +76,12 @@ export function useAgentPipeline() {
 
   // Check if real API is configured for current provider
   const hasApiKeyConfigured = useCallback((): boolean => {
-    const { provider, deepseekKey, openrouterKey } = settings;
+    const { provider, deepseekKey, openrouterKey, qwenKey, sakanaKey, geminiKey } = settings;
     if (provider === 'deepseek') return !!deepseekKey && deepseekKey.trim().length > 8;
     if (provider === 'openrouter') return !!openrouterKey && openrouterKey.trim().length > 8;
+    if (provider === 'qwen') return !!qwenKey && qwenKey.trim().length > 8;
+    if (provider === 'sakana') return !!sakanaKey && sakanaKey.trim().length > 8;
+    if (provider === 'gemini') return !!geminiKey && geminiKey.trim().length > 8;
     if (provider === 'ollama') return true; // local, no key required
     return false;
   }, [settings]);
@@ -98,7 +113,13 @@ export function useAgentPipeline() {
               ? settings.deepseekKey
               : settings.provider === 'openrouter'
                 ? settings.openrouterKey
-                : undefined;
+                : settings.provider === 'qwen'
+                  ? settings.qwenKey
+                  : settings.provider === 'sakana'
+                    ? settings.sakanaKey
+                    : settings.provider === 'gemini'
+                      ? settings.geminiKey
+                      : undefined;
           const effectiveModel = settings.modelName.trim() || undefined;
 
           const taskInput = `針對以下寫作單元進行專業改寫優化建議。\n文體：${genre}\n主題方向：${themeHint}\n專案：${projectTitle}\n單元標題：${chapterTitle}\n\n目前內容：\n${content}`;

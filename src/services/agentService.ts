@@ -44,7 +44,7 @@ export interface ProgressCallback {
   (stageName: AgentStageName, status: 'start' | 'complete' | 'error', message?: string): void;
 }
 
-export type Provider = 'deepseek' | 'openrouter' | 'ollama';
+export type Provider = 'deepseek' | 'openrouter' | 'ollama' | 'qwen' | 'sakana' | 'gemini';
 
 export interface PipelineTheme {
   /** Genre label, e.g. 技術文件 / 一般寫作 */
@@ -78,6 +78,9 @@ export interface PipelineConfig {
 const DEEPSEEK_API_URL = 'https://api.deepseek.com/v1/chat/completions';
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
 const OLLAMA_API_URL = 'http://localhost:11434/api/chat';
+const QWEN_API_URL = 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions';
+const SAKANA_API_URL = 'https://api.sakana.ai/v1/chat/completions';
+const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions';
 const DEFAULT_MODEL = 'deepseek-chat';
 
 /** System prompt with injection defense instruction */
@@ -376,12 +379,132 @@ async function callOllama(prompt: string, model: string = 'qwen2.5:7b'): Promise
 }
 
 /**
+ * Alibaba Qwen (DashScope) — OpenAI-compatible mode
+ * Get key: https://bailian.console.aliyun.com/ → API-KEY 管理
+ */
+async function callQwen(prompt: string, apiKey: string, model: string = 'qwen-plus'): Promise<string> {
+  if (!apiKey || apiKey.trim().length < 10) {
+    throw new Error('使用 Alibaba Qwen 需提供 API Key（從百煉平台取得）');
+  }
+
+  const response = await fetch(QWEN_API_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${apiKey.trim()}`,
+    },
+    body: JSON.stringify({
+      model,
+      messages: [
+        { role: 'system', content: SYSTEM_PROMPT },
+        { role: 'user', content: prompt },
+      ],
+      temperature: 0.75,
+      max_tokens: 2500,
+      top_p: 0.95,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(localizeApiError(response.status, 'Alibaba Qwen'));
+  }
+
+  const data = await response.json();
+  if (!data.choices?.[0]?.message?.content) {
+    throw new Error('Alibaba Qwen 回應格式異常，缺少 content');
+  }
+  return data.choices[0].message.content.trim();
+}
+
+/**
+ * Sakana AI — OpenAI-compatible API
+ * Get key: https://sakana.ai/ → API Console
+ */
+async function callSakana(prompt: string, apiKey: string, model: string = 'sakana-ai'): Promise<string> {
+  if (!apiKey || apiKey.trim().length < 10) {
+    throw new Error('使用 Sakana AI 需提供 API Key');
+  }
+
+  const response = await fetch(SAKANA_API_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${apiKey.trim()}`,
+    },
+    body: JSON.stringify({
+      model,
+      messages: [
+        { role: 'system', content: SYSTEM_PROMPT },
+        { role: 'user', content: prompt },
+      ],
+      temperature: 0.75,
+      max_tokens: 2500,
+      top_p: 0.95,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(localizeApiError(response.status, 'Sakana AI'));
+  }
+
+  const data = await response.json();
+  if (!data.choices?.[0]?.message?.content) {
+    throw new Error('Sakana AI 回應格式異常，缺少 content');
+  }
+  return data.choices[0].message.content.trim();
+}
+
+/**
+ * Google Gemini (AI Studio) — OpenAI-compatible endpoint
+ * Get key: https://aistudio.google.com/apikey
+ */
+async function callGemini(prompt: string, apiKey: string, model: string = 'gemini-2.0-flash'): Promise<string> {
+  if (!apiKey || apiKey.trim().length < 10) {
+    throw new Error('使用 Gemini 需提供 API Key（從 Google AI Studio 取得）');
+  }
+
+  const response = await fetch(GEMINI_API_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${apiKey.trim()}`,
+    },
+    body: JSON.stringify({
+      model,
+      messages: [
+        { role: 'system', content: SYSTEM_PROMPT },
+        { role: 'user', content: prompt },
+      ],
+      temperature: 0.75,
+      max_tokens: 2500,
+      top_p: 0.95,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(localizeApiError(response.status, 'Gemini'));
+  }
+
+  const data = await response.json();
+  if (!data.choices?.[0]?.message?.content) {
+    throw new Error('Gemini 回應格式異常，缺少 content');
+  }
+  return data.choices[0].message.content.trim();
+}
+
+/**
  * Unified LLM caller that routes to the correct provider.
  */
 async function callLLM(prompt: string, provider: Provider, apiKey?: string, model?: string): Promise<string> {
-  const m =
-    model ||
-    (provider === 'deepseek' ? DEFAULT_MODEL : provider === 'openrouter' ? 'deepseek/deepseek-chat' : 'qwen2.5:7b');
+  const defaultModels: Record<Provider, string> = {
+    deepseek: DEFAULT_MODEL,
+    openrouter: 'deepseek/deepseek-chat',
+    ollama: 'qwen2.5:7b',
+    qwen: 'qwen-plus',
+    sakana: 'sakana-ai',
+    gemini: 'gemini-2.0-flash',
+  };
+  const m = model || defaultModels[provider];
 
   switch (provider) {
     case 'deepseek':
@@ -392,6 +515,15 @@ async function callLLM(prompt: string, provider: Provider, apiKey?: string, mode
       return callOpenRouter(prompt, apiKey, m);
     case 'ollama':
       return callOllama(prompt, m);
+    case 'qwen':
+      if (!apiKey) throw new Error('使用 Alibaba Qwen 需提供 API Key');
+      return callQwen(prompt, apiKey, m);
+    case 'sakana':
+      if (!apiKey) throw new Error('使用 Sakana AI 需提供 API Key');
+      return callSakana(prompt, apiKey, m);
+    case 'gemini':
+      if (!apiKey) throw new Error('使用 Gemini 需提供 API Key');
+      return callGemini(prompt, apiKey, m);
     default:
       throw new Error(`未知的 provider: ${provider}`);
   }

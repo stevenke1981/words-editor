@@ -47,17 +47,17 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
       onClick={onClose}
     >
       <div
-        className="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden"
+        className="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="px-6 py-4 border-b flex justify-between items-center bg-slate-50">
+        <div className="px-6 py-4 border-b flex justify-between items-center bg-slate-50 shrink-0">
           <div className="font-semibold flex items-center gap-x-2 text-lg">
             ⚙ API 設定
           </div>
           <button onClick={onClose} className="text-3xl leading-none text-slate-400 hover:text-slate-600">×</button>
         </div>
 
-        <div className="p-6 space-y-5 text-sm">
+        <div className="p-6 space-y-5 text-sm overflow-y-auto">
           {/* Provider */}
           <div>
             <label className="block text-xs text-slate-500 mb-1.5 font-medium">提供者（Provider）</label>
@@ -68,10 +68,19 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
             >
               <option value="deepseek">DeepSeek（雲端）</option>
               <option value="openrouter">OpenRouter（雲端）</option>
+              <option value="qwen">Alibaba Qwen 通義千問（百煉平台）</option>
+              <option value="sakana">Sakana AI（雲端）</option>
+              <option value="gemini">Google Gemini（AI Studio）</option>
               <option value="ollama">本地 Ollama（需本地運行）</option>
             </select>
             <div className="text-[10px] text-slate-400 mt-1">
-              {draft.provider === 'ollama' ? '呼叫 http://localhost:11434 （需先 ollama serve 並 pull 模型）' : 'OpenAI 相容 API'}
+              {draft.provider === 'ollama'
+                ? '呼叫 http://localhost:11434 （需先 ollama serve 並 pull 模型）'
+                : draft.provider === 'qwen'
+                  ? 'DashScope OpenAI 相容模式（預設模型 qwen-plus）'
+                  : draft.provider === 'gemini'
+                    ? 'Google AI Studio OpenAI 相容端點（預設模型 gemini-2.0-flash）'
+                    : 'OpenAI 相容 API'}
             </div>
           </div>
 
@@ -107,6 +116,54 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
             <div className="text-[10px] text-slate-400 mt-0.5">從 https://openrouter.ai/ 取得（支援多模型）</div>
           </div>
 
+          {/* Alibaba Qwen Key */}
+          <div>
+            <label className="block text-xs text-slate-500 mb-1.5 font-medium">Alibaba Qwen（通義千問）API Key</label>
+            <input
+              type="password"
+              value={draft.qwenKey}
+              onChange={(e) => setDraft({ ...draft, qwenKey: e.target.value })}
+              placeholder="sk-..."
+              className="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm font-mono focus:outline-none focus:border-blue-400"
+            />
+            {draft.qwenKey && (
+              <div className="mt-1 text-[10px] text-emerald-600">已設定：{maskKey(draft.qwenKey)}</div>
+            )}
+            <div className="text-[10px] text-slate-400 mt-0.5">從 https://bailian.console.aliyun.com/ → API-KEY 管理取得（Token Plan 個人版適用）</div>
+          </div>
+
+          {/* Sakana AI Key */}
+          <div>
+            <label className="block text-xs text-slate-500 mb-1.5 font-medium">Sakana AI API Key</label>
+            <input
+              type="password"
+              value={draft.sakanaKey}
+              onChange={(e) => setDraft({ ...draft, sakanaKey: e.target.value })}
+              placeholder="sk-..."
+              className="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm font-mono focus:outline-none focus:border-blue-400"
+            />
+            {draft.sakanaKey && (
+              <div className="mt-1 text-[10px] text-emerald-600">已設定：{maskKey(draft.sakanaKey)}</div>
+            )}
+            <div className="text-[10px] text-slate-400 mt-0.5">從 https://sakana.ai/ → API Console 取得</div>
+          </div>
+
+          {/* Google Gemini Key */}
+          <div>
+            <label className="block text-xs text-slate-500 mb-1.5 font-medium">Google Gemini API Key</label>
+            <input
+              type="password"
+              value={draft.geminiKey}
+              onChange={(e) => setDraft({ ...draft, geminiKey: e.target.value })}
+              placeholder="AIza..."
+              className="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm font-mono focus:outline-none focus:border-blue-400"
+            />
+            {draft.geminiKey && (
+              <div className="mt-1 text-[10px] text-emerald-600">已設定：{maskKey(draft.geminiKey)}</div>
+            )}
+            <div className="text-[10px] text-slate-400 mt-0.5">從 https://aistudio.google.com/apikey 取得（免費額度）</div>
+          </div>
+
           {/* Optional Model */}
           <div>
             <label className="block text-xs text-slate-500 mb-1.5 font-medium">模型名稱（選填，留空使用預設）</label>
@@ -117,7 +174,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
               placeholder="例如：deepseek-chat 或 deepseek/deepseek-chat"
               className="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm font-mono focus:outline-none focus:border-blue-400"
             />
-            <div className="text-[10px] text-slate-400 mt-0.5">DeepSeek 預設 deepseek-chat；OpenRouter 預設 deepseek/deepseek-chat；Ollama 預設 qwen2.5:7b</div>
+            <div className="text-[10px] text-slate-400 mt-0.5">DeepSeek 預設 deepseek-chat；OpenRouter 預設 deepseek/deepseek-chat；Qwen 預設 qwen-plus；Sakana 預設 sakana-ai；Gemini 預設 gemini-2.0-flash；Ollama 預設 qwen2.5:7b</div>
           </div>
 
           <div className="text-[10px] bg-amber-50 border border-amber-200 text-amber-700 rounded-xl p-3">
@@ -125,7 +182,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
           </div>
         </div>
 
-        <div className="bg-slate-50 px-6 py-3 text-xs flex justify-end gap-x-3 border-t">
+        <div className="bg-slate-50 px-6 py-3 text-xs flex justify-end gap-x-3 border-t shrink-0">
           <button
             onClick={() => {
               onClear();
