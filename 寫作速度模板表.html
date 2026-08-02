@@ -1,0 +1,1575 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>財經自由之前 | 寫作速度模板表（複製版）</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&amp;family=Inter:wght@300;400;500;600&amp;display=swap');
+        
+        :root {
+            --primary: #2563eb;
+        }
+        
+        body {
+            font-family: 'Noto Sans TC', 'Inter', system-ui, -apple-system, sans-serif;
+        }
+        
+        .app-container {
+            background-color: #f8fafc;
+            min-height: 100vh;
+        }
+        
+        .sidebar {
+            background-color: #ffffff;
+            border-right: 1px solid #e2e8f0;
+        }
+        
+        .main-editor {
+            background-color: #ffffff;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+        
+        .status-panel {
+            background-color: #ffffff;
+            border-left: 1px solid #e2e8f0;
+        }
+        
+        .section-header {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #475569;
+            letter-spacing: 0.025em;
+        }
+        
+        .chapter-item {
+            transition: all 0.1s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .chapter-item:hover {
+            background-color: #f1f5f9;
+            transform: translateX(2px);
+        }
+        
+        .chapter-item.active {
+            background-color: #eff6ff;
+            border-left: 3px solid #2563eb;
+        }
+        
+        .status-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 9999px;
+            font-weight: 500;
+        }
+        
+        .status-完成 {
+            background-color: #dcfce7;
+            color: #166534;
+        }
+        
+        .status-待寫 {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+        
+        .status-草稿完成 {
+            background-color: #dbeafe;
+            color: #1e40af;
+        }
+        
+        .rich-editor {
+            min-height: 420px;
+            padding: 1.25rem;
+            line-height: 1.8;
+            font-size: 15px;
+            color: #1e293b;
+            outline: none;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            background: white;
+        }
+        
+        .rich-editor:focus {
+            border-color: #93c5fd;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+        
+        .toolbar-btn {
+            padding: 0.375rem 0.625rem;
+            border-radius: 0.375rem;
+            transition: all 0.1s;
+            font-size: 0.875rem;
+        }
+        
+        .toolbar-btn:hover {
+            background-color: #f1f5f9;
+        }
+        
+        .metric-value {
+            font-variant-numeric: tabular-nums;
+        }
+        
+        .nav-active {
+            background-color: #eff6ff;
+            color: #1e40af;
+            font-weight: 600;
+        }
+        
+        .knowledge-node {
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .knowledge-node:hover {
+            transform: scale(1.03);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+        }
+        
+        .book-structure-item {
+            font-size: 0.875rem;
+        }
+        
+        .metric-label {
+            font-size: 0.75rem;
+            color: #64748b;
+        }
+        
+        .data-table {
+            font-size: 0.875rem;
+        }
+        
+        .app-header {
+            background: linear-gradient(to right, #1e40af, #3b82f6);
+            color: white;
+        }
+        
+        .grid-bg {
+            background-image: 
+                linear-gradient(#e2e8f0 1px, transparent 1px),
+                linear-gradient(90deg, #e2e8f0 1px, transparent 1px);
+            background-size: 24px 24px;
+            opacity: 0.4;
+        }
+    </style>
+</head>
+<body class="bg-slate-100">
+    <!-- Top Navigation -->
+    <div class="bg-white border-b border-slate-200 sticky top-0 z-50">
+        <div class="max-w-[1440px] mx-auto">
+            <div class="flex items-center justify-between px-6 py-3">
+                <div class="flex items-center gap-x-3">
+                    <!-- Logo -->
+                    <div class="flex items-center gap-x-2">
+                        <div class="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center">
+                            <i class="fa-solid fa-feather-pointed text-white text-2xl"></i>
+                        </div>
+                        <div>
+                            <div class="font-bold text-xl tracking-tight text-slate-900">財經自由之前</div>
+                            <div class="text-[10px] text-slate-500 -mt-1">寫作速度模板表 v2.4</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Quick Actions -->
+                    <div class="flex items-center gap-x-2 ml-6">
+                        <button onclick="jumpToToday()"
+                            class="flex items-center gap-x-2 px-4 py-1.5 text-sm font-medium bg-white border border-slate-300 hover:bg-slate-50 rounded-xl transition-colors">
+                            <i class="fa-solid fa-calendar-day text-blue-600"></i>
+                            <span>跳到今日</span>
+                        </button>
+                        
+                        <button onclick="exportProgressJSON()"
+                            class="flex items-center gap-x-2 px-4 py-1.5 text-sm font-medium bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl transition-colors">
+                            <i class="fa-solid fa-file-export"></i>
+                            <span>匯出進度 JSON</span>
+                        </button>
+                        
+                        <div class="relative group">
+                            <button onclick="showAllArticles()"
+                                class="flex items-center gap-x-2 px-4 py-1.5 text-sm font-medium bg-white border border-slate-300 hover:bg-slate-50 rounded-xl transition-colors">
+                                <i class="fa-solid fa-list-ul"></i>
+                                <span>全部文章</span>
+                                <i class="fa-solid fa-chevron-down text-xs ml-1"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex items-center gap-x-4 text-sm">
+                    <div class="flex items-center bg-slate-100 rounded-full px-1 py-1">
+                        <div class="flex -space-x-1">
+                            <div class="w-6 h-6 bg-blue-500 rounded-full border-2 border-white flex items-center justify-center text-[10px] text-white font-bold">K</div>
+                            <div class="w-6 h-6 bg-emerald-500 rounded-full border-2 border-white flex items-center justify-center text-[10px] text-white font-bold">AI</div>
+                        </div>
+                        <span class="ml-2 text-xs text-slate-600 pr-2">AI 協作模式</span>
+                    </div>
+                    
+                    <div class="text-xs px-3 py-1 bg-white border border-slate-200 rounded-full flex items-center gap-x-1.5">
+                        <div class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+                        <span class="text-emerald-700 font-medium">已連線本地知識庫</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-[1440px] mx-auto px-6 pt-6 pb-12">
+        <!-- Main 3-Column Layout -->
+        <div class="grid grid-cols-12 gap-5">
+            
+            <!-- LEFT SIDEBAR: Knowledge + Structure -->
+            <div class="col-span-12 lg:col-span-3 space-y-5">
+                
+                <!-- 書籍知識關聯圖 -->
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div class="px-4 py-3 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+                        <div class="flex items-center gap-x-2">
+                            <i class="fa-solid fa-project-diagram text-blue-600"></i>
+                            <span class="section-header">書籍知識關聯圖</span>
+                        </div>
+                        <button onclick="showKnowledgeGraphModal()" 
+                                class="text-xs px-2.5 py-1 hover:bg-blue-100 text-blue-600 rounded-lg flex items-center gap-x-1 transition-colors">
+                            <span>展開</span>
+                            <i class="fa-solid fa-expand-arrows-alt text-xs"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="p-4">
+                        <!-- Mini Knowledge Graph -->
+                        <div class="bg-slate-50 rounded-xl p-3 text-xs">
+                            <div class="flex flex-wrap gap-1.5">
+                                <div onclick="highlightConcept(this, '財富自由')" class="knowledge-node cursor-pointer px-3 py-1 bg-white border border-blue-200 text-blue-700 rounded-full text-xs font-medium flex items-center gap-x-1 shadow-sm">
+                                    <i class="fa-solid fa-gem text-blue-500 text-xs"></i>
+                                    <span>財富自由</span>
+                                </div>
+                                <div onclick="highlightConcept(this, '心態轉變')" class="knowledge-node cursor-pointer px-3 py-1 bg-white border border-emerald-200 text-emerald-700 rounded-full text-xs font-medium flex items-center gap-x-1 shadow-sm">
+                                    <span>心態轉變</span>
+                                </div>
+                                <div onclick="highlightConcept(this, '被動收入')" class="knowledge-node cursor-pointer px-3 py-1 bg-white border border-purple-200 text-purple-700 rounded-full text-xs font-medium flex items-center gap-x-1 shadow-sm">
+                                    <span>被動收入</span>
+                                </div>
+                                <div onclick="highlightConcept(this, '時間自由')" class="knowledge-node cursor-pointer px-3 py-1 bg-white border border-amber-200 text-amber-700 rounded-full text-xs font-medium flex items-center gap-x-1 shadow-sm">
+                                    <span>時間自由</span>
+                                </div>
+                                <div onclick="highlightConcept(this, '技能 monetization')" class="knowledge-node cursor-pointer px-3 py-1 bg-white border border-rose-200 text-rose-700 rounded-full text-xs font-medium flex items-center gap-x-1 shadow-sm">
+                                    <span>技能 monetization</span>
+                                </div>
+                            </div>
+                            <div class="mt-3 text-[10px] text-slate-500 flex items-center gap-x-1">
+                                <i class="fa-solid fa-link text-xs"></i>
+                                <span>已關聯 17 個核心概念 • 3 個書籍來源</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 金句總結 -->
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div class="px-4 py-3 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+                        <div class="flex items-center gap-x-2">
+                            <i class="fa-solid fa-quote-left text-amber-500"></i>
+                            <span class="section-header">金句總結</span>
+                            <span id="quote-count" class="text-xs bg-amber-100 text-amber-700 px-2 rounded-full">12</span>
+                        </div>
+                        <button onclick="addGoldenQuote()" 
+                                class="text-xs flex items-center gap-x-1 px-2 py-1 text-amber-600 hover:bg-amber-50 rounded-lg transition-colors">
+                            <i class="fa-solid fa-plus text-xs"></i>
+                            <span>新增</span>
+                        </button>
+                    </div>
+                    
+                    <div class="p-4 max-h-[148px] overflow-auto text-sm space-y-2.5" id="golden-quotes-list">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+                
+                <!-- 書籍架構 -->
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div class="px-4 py-3 border-b border-slate-100 bg-slate-50">
+                        <div class="flex items-center justify-between">
+                            <span class="section-header flex items-center gap-x-2">
+                                <i class="fa-solid fa-sitemap text-indigo-600"></i>
+                                書籍架構
+                            </span>
+                            <span class="text-xs text-slate-500">共 5 部 • 23 章</span>
+                        </div>
+                    </div>
+                    
+                    <div class="p-2 text-sm">
+                        <div class="space-y-0.5">
+                            <div class="flex items-center px-3 py-1.5 text-slate-700 hover:bg-slate-50 rounded-lg cursor-pointer" onclick="jumpToSection('序部')">
+                                <i class="fa-solid fa-book mr-2 text-indigo-400 w-4"></i>
+                                <span class="font-medium">序部：財務自由之前</span>
+                            </div>
+                            <div class="flex items-center px-3 py-1.5 text-slate-700 hover:bg-slate-50 rounded-lg cursor-pointer" onclick="jumpToSection('第一部')">
+                                <i class="fa-solid fa-book mr-2 text-indigo-400 w-4"></i>
+                                <span class="font-medium">第一部：心態重構</span>
+                            </div>
+                            <div class="flex items-center px-3 py-1.5 text-slate-700 hover:bg-slate-50 rounded-lg cursor-pointer" onclick="jumpToSection('第二部')">
+                                <i class="fa-solid fa-book mr-2 text-indigo-400 w-4"></i>
+                                <span class="font-medium">第二部：能力變現</span>
+                            </div>
+                            <div class="flex items-center px-3 py-1.5 text-slate-700 hover:bg-slate-50 rounded-lg cursor-pointer" onclick="jumpToSection('第三部')">
+                                <i class="fa-solid fa-book mr-2 text-indigo-400 w-4"></i>
+                                <span class="font-medium">第三部：資產建立</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+            </div>
+            
+            <!-- CENTER: 單篇編輯器 -->
+            <div class="col-span-12 lg:col-span-6">
+                <div class="main-editor rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col h-full">
+                    
+                    <!-- Editor Header -->
+                    <div class="px-5 py-3.5 border-b border-slate-100 bg-white flex items-center justify-between">
+                        <div class="flex items-center gap-x-3">
+                            <div>
+                                <span class="text-xs uppercase tracking-[1.5px] text-blue-600 font-semibold">單篇編輯器</span>
+                            </div>
+                            <div id="current-chapter-badge" 
+                                 class="px-3 py-0.5 text-xs font-medium bg-blue-100 text-blue-700 rounded-full flex items-center gap-x-1">
+                                <!-- JS populated -->
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center gap-x-4 text-xs">
+                            <div class="flex items-center text-emerald-600">
+                                <i class="fa-solid fa-check-circle mr-1.5"></i>
+                                <span id="save-status">已自動儲存</span>
+                            </div>
+                            <div class="text-slate-400">|</div>
+                            <div class="font-mono text-slate-500">
+                                <span id="word-count">0</span> 字
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Title -->
+                    <div class="px-5 pt-4 pb-2 bg-white">
+                        <input id="article-title" type="text" 
+                               class="w-full text-2xl font-semibold tracking-tight text-slate-900 placeholder:text-slate-400 border-0 focus:ring-0 p-0 bg-transparent"
+                               placeholder="輸入章節標題..."
+                               oninput="updateCurrentChapterTitle()">
+                    </div>
+                    
+                    <!-- Rich Text Toolbar -->
+                    <div class="px-4 py-2 bg-slate-50 border-y border-slate-100 flex items-center gap-x-1 flex-wrap">
+                        <div class="flex items-center bg-white border border-slate-200 rounded-xl p-0.5 shadow-sm">
+                            <button onclick="formatText('bold')" class="toolbar-btn px-2.5 text-slate-700 hover:text-slate-900" title="粗體 (Ctrl+B)">
+                                <i class="fa-solid fa-bold"></i>
+                            </button>
+                            <button onclick="formatText('italic')" class="toolbar-btn px-2.5 text-slate-700 hover:text-slate-900" title="斜體 (Ctrl+I)">
+                                <i class="fa-solid fa-italic"></i>
+                            </button>
+                            <div class="w-px h-4 bg-slate-200 mx-1"></div>
+                            <button onclick="formatText('insertUnorderedList')" class="toolbar-btn px-2.5 text-slate-700 hover:text-slate-900" title="項目符號清單">
+                                <i class="fa-solid fa-list-ul"></i>
+                            </button>
+                            <button onclick="formatText('insertOrderedList')" class="toolbar-btn px-2.5 text-slate-700 hover:text-slate-900" title="編號清單">
+                                <i class="fa-solid fa-list-ol"></i>
+                            </button>
+                        </div>
+                        
+                        <div class="flex items-center bg-white border border-slate-200 rounded-xl p-0.5 shadow-sm ml-1">
+                            <button onclick="formatHeading(1)" class="toolbar-btn px-3 text-xs font-semibold text-slate-700">H1</button>
+                            <button onclick="formatHeading(2)" class="toolbar-btn px-3 text-xs font-semibold text-slate-700">H2</button>
+                            <button onclick="formatHeading(3)" class="toolbar-btn px-3 text-xs font-semibold text-slate-700">H3</button>
+                        </div>
+                        
+                        <div class="flex items-center bg-white border border-slate-200 rounded-xl p-0.5 shadow-sm ml-1">
+                            <button onclick="formatText('formatBlock', 'blockquote')" class="toolbar-btn px-2.5 text-slate-700 hover:text-slate-900" title="引用區塊">
+                                <i class="fa-solid fa-quote-left"></i>
+                            </button>
+                            <button onclick="insertLink()" class="toolbar-btn px-2.5 text-slate-700 hover:text-slate-900" title="插入連結">
+                                <i class="fa-solid fa-link"></i>
+                            </button>
+                        </div>
+                        
+                        <div class="flex-1"></div>
+                        
+                        <!-- AI Assist Buttons -->
+                        <div class="flex items-center gap-x-1.5">
+                            <button onclick="aiSuggestRewrite()" 
+                                    class="flex items-center text-xs px-3 py-1.5 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white rounded-xl shadow-sm transition-all active:scale-[0.985]">
+                                <i class="fa-solid fa-magic mr-1.5 text-xs"></i>
+                                <span class="font-medium">AI 建議改寫</span>
+                            </button>
+                            
+                            <button onclick="extractGoldenSentences()" 
+                                    class="flex items-center text-xs px-3 py-1.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-xl transition-colors">
+                                <i class="fa-solid fa-magic mr-1.5 text-amber-500"></i>
+                                <span>提取金句</span>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Editor Content -->
+                    <div class="px-5 py-4 bg-white flex-1">
+                        <div id="rich-editor" contenteditable="true" 
+                             class="rich-editor w-full prose prose-slate max-w-none focus:outline-none"
+                             oninput="updateWordCount(); autoSave();"
+                             onkeyup="autoSave()">
+                            <!-- Content loaded dynamically by JS -->
+                        </div>
+                    </div>
+                    
+                    <div class="px-5 py-2.5 bg-slate-50 border-t text-xs flex items-center justify-between text-slate-500">
+                        <div>
+                            最後儲存：<span id="last-saved-time">剛剛</span>
+                        </div>
+                        <div class="flex items-center gap-x-4">
+                            <div class="flex items-center gap-x-1">
+                                <i class="fa-solid fa-sync text-emerald-500"></i>
+                                <span class="text-emerald-600 text-xs font-medium">即時同步至知識庫</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- RIGHT SIDEBAR: 文章狀態 -->
+            <div class="col-span-12 lg:col-span-3">
+                <div class="status-panel rounded-2xl border border-slate-200 shadow-sm h-full flex flex-col">
+                    
+                    <div class="px-4 py-3 border-b border-slate-100 bg-white rounded-t-2xl">
+                        <div class="flex items-center justify-between">
+                            <span class="section-header flex items-center gap-x-2">
+                                <i class="fa-solid fa-chart-line text-emerald-600"></i>
+                                文章狀態
+                            </span>
+                            <span id="article-status-badge" class="status-badge status-待寫">待寫</span>
+                        </div>
+                    </div>
+                    
+                    <div class="p-4 flex-1 space-y-5 text-sm overflow-auto">
+                        
+                        <!-- Basic Info -->
+                        <div>
+                            <div class="metric-label mb-1">篇章</div>
+                            <div id="status-chapter" class="font-semibold text-slate-900 leading-tight"></div>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <div class="metric-label mb-1">部別</div>
+                                <div id="status-section" class="font-medium text-slate-700"></div>
+                            </div>
+                            <div>
+                                <div class="metric-label mb-1">排程</div>
+                                <select id="status-schedule" onchange="updateChapterStatus()" 
+                                        class="w-full text-sm border border-slate-300 rounded-lg px-2.5 py-1 focus:ring-1 focus:ring-blue-400">
+                                    <option value="已完成草稿">已完成草稿</option>
+                                    <option value="待寫">待寫</option>
+                                    <option value="撰寫中">撰寫中</option>
+                                    <option value="已完稿">已完稿</option>
+                                    <option value="待審">待審</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <div class="metric-label mb-1">靈感筆記</div>
+                            <div class="flex items-center gap-x-2">
+                                <span id="status-notes" class="text-xs px-2.5 py-0.5 bg-amber-100 text-amber-700 rounded">尚無筆記</span>
+                                <button onclick="editInspirationNotes()" class="text-blue-600 text-xs hover:underline">編輯</button>
+                            </div>
+                        </div>
+                        
+                        <!-- Writing Metrics -->
+                        <div class="pt-2 border-t">
+                            <div class="text-xs font-semibold text-slate-600 mb-2 flex items-center gap-x-1">
+                                <i class="fa-solid fa-tachometer-alt"></i>
+                                <span>寫作指標</span>
+                            </div>
+                            
+                            <div class="space-y-3">
+                                <div class="flex justify-between items-baseline">
+                                    <span class="metric-label">單篇字數</span>
+                                    <span id="status-wordcount" class="font-mono text-lg font-semibold text-slate-900 metric-value">874</span>
+                                </div>
+                                
+                                <div class="grid grid-cols-2 gap-x-3 text-xs">
+                                    <div class="bg-emerald-50 rounded-lg px-3 py-2">
+                                        <div class="text-emerald-600">新增字數</div>
+                                        <div id="status-added" class="font-semibold text-emerald-700 text-lg metric-value">+124</div>
+                                    </div>
+                                    <div class="bg-rose-50 rounded-lg px-3 py-2">
+                                        <div class="text-rose-600">刪除字數</div>
+                                        <div id="status-deleted" class="font-semibold text-rose-700 text-lg metric-value">-38</div>
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <div class="flex justify-between text-xs mb-1">
+                                        <span class="metric-label">原文保留率</span>
+                                        <span id="status-retention" class="font-mono font-medium">100%</span>
+                                    </div>
+                                    <div class="h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                                        <div id="retention-bar" class="h-full bg-emerald-500 transition-all" style="width: 100%"></div>
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <div class="flex justify-between text-xs mb-1">
+                                        <span class="metric-label">改寫幅度</span>
+                                        <span id="status-rewrite" class="font-mono font-medium">0%</span>
+                                    </div>
+                                    <div class="h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                                        <div id="rewrite-bar" class="h-full bg-amber-500 transition-all" style="width: 0%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Linked Illustration -->
+                        <div>
+                            <div class="metric-label mb-1.5">圖解</div>
+                            <div onclick="showIllustrationModal()" 
+                                 class="cursor-pointer border border-dashed border-slate-300 hover:border-blue-300 rounded-xl p-3 text-xs flex items-center gap-x-3 bg-white transition-colors">
+                                <i class="fa-solid fa-image text-blue-400 text-lg"></i>
+                                <div>
+                                    <div class="font-medium text-slate-700">逃離與選擇對照圖</div>
+                                    <div class="text-[10px] text-slate-500">點擊查看 / 替換圖片</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- References -->
+                        <div>
+                            <div class="flex items-center justify-between mb-1.5">
+                                <div class="metric-label">參考篇文</div>
+                                <button onclick="addReference()" class="text-[10px] text-blue-600 hover:underline flex items-center gap-x-0.5">
+                                    <i class="fa-solid fa-plus text-xs"></i> 新增
+                                </button>
+                            </div>
+                            
+                            <div id="references-list" class="space-y-1 text-xs max-h-[92px] overflow-auto pr-1">
+                                <!-- Populated by JS -->
+                            </div>
+                        </div>
+                        
+                    </div>
+                    
+                    <!-- Footer actions -->
+                    <div class="p-3 border-t bg-slate-50 rounded-b-2xl flex gap-x-2">
+                        <button onclick="markAsCompleted()" 
+                                class="flex-1 text-xs py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-medium flex items-center justify-center gap-x-1.5 transition-colors">
+                            <i class="fa-solid fa-check-double"></i>
+                            <span>標記為已完成</span>
+                        </button>
+                        <button onclick="deleteCurrentChapter()" 
+                                class="px-3 text-xs py-2 bg-white border border-slate-300 hover:bg-red-50 hover:text-red-600 text-slate-500 rounded-xl transition-colors">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+                    
+                </div>
+            </div>
+            
+        </div>
+        
+        <!-- Bottom Progress Overview -->
+        <div class="mt-6 bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+            <div class="flex items-center justify-between mb-3 px-1">
+                <div>
+                    <span class="font-semibold text-slate-800">整體寫作進度</span>
+                    <span class="ml-3 text-xs px-2.5 py-0.5 bg-blue-100 text-blue-700 rounded-full font-medium">序部 1/4 完成</span>
+                </div>
+                <div class="text-xs text-slate-500">總字數： <span class="font-mono font-semibold text-slate-700">12,487</span> / 目標 45,000</div>
+            </div>
+            
+            <div class="flex gap-x-2">
+                <div class="flex-1 bg-slate-100 h-2.5 rounded-full overflow-hidden">
+                    <div class="h-full bg-gradient-to-r from-blue-600 to-indigo-600 transition-all" style="width: 27.7%"></div>
+                </div>
+                <div class="text-xs font-medium text-blue-700 w-9 text-right">28%</div>
+            </div>
+            
+            <div class="flex justify-between text-[10px] text-slate-500 mt-1 px-0.5">
+                <div>已完成 7 章</div>
+                <div>進行中 4 章 • 待寫 12 章</div>
+            </div>
+        </div>
+        
+    </div>
+    
+    <!-- Toast Notification -->
+    <div id="toast" class="hidden fixed bottom-6 right-6 bg-slate-900 text-white px-5 py-3 rounded-2xl shadow-xl flex items-center gap-x-3 text-sm">
+        <i class="fa-solid fa-check-circle text-emerald-400"></i>
+        <span id="toast-message"></span>
+    </div>
+    
+    <!-- Modals -->
+    <!-- Knowledge Graph Modal -->
+    <div id="knowledge-modal" onclick="if (event.target.id === 'knowledge-modal') hideKnowledgeModal()" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-6">
+        <div onclick="event.stopImmediatePropagation()" class="bg-white w-full max-w-3xl rounded-3xl shadow-2xl overflow-hidden">
+            <div class="px-6 py-4 border-b flex justify-between items-center">
+                <div class="font-semibold flex items-center gap-x-2 text-lg">
+                    <i class="fa-solid fa-project-diagram text-blue-600"></i>
+                    書籍知識關聯圖（完整版）
+                </div>
+                <button onclick="hideKnowledgeModal()" class="text-slate-400 hover:text-slate-600 text-xl leading-none">×</button>
+            </div>
+            <div class="p-8">
+                <div class="text-center text-sm text-slate-500 mb-6">此圖顯示書中核心概念之間的關聯（可使用 Mermaid / Cytoscape / vis-network 實作互動版）</div>
+                
+                <!-- Visual fake graph -->
+                <div class="grid grid-cols-3 gap-4 max-w-[620px] mx-auto">
+                    <div class="col-span-3 flex justify-center">
+                        <div class="px-8 py-3 bg-blue-600 text-white rounded-2xl shadow text-sm font-medium flex items-center gap-x-2">
+                            <i class="fa-solid fa-gem"></i>
+                            <span>財富自由（核心目標）</span>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-emerald-100 border border-emerald-300 text-emerald-800 px-4 py-3 rounded-2xl text-xs text-center">
+                        <div class="font-semibold">心態層</div>
+                        <div class="mt-1 text-[10px]">•  scarcity → abundance<br>• 逃避 vs 創造</div>
+                    </div>
+                    <div class="bg-purple-100 border border-purple-300 text-purple-800 px-4 py-3 rounded-2xl text-xs text-center">
+                        <div class="font-semibold">能力層</div>
+                        <div class="mt-1 text-[10px]">• 技能 monetization<br>• 個人品牌</div>
+                    </div>
+                    <div class="bg-amber-100 border border-amber-300 text-amber-800 px-4 py-3 rounded-2xl text-xs text-center">
+                        <div class="font-semibold">資產層</div>
+                        <div class="mt-1 text-[10px]">• 被動收入系統<br>• 複利效應</div>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-slate-50 px-6 py-3 text-xs flex justify-end gap-x-3">
+                <button onclick="hideKnowledgeModal()" class="px-5 py-2 text-slate-600">關閉</button>
+                <button onclick="alert('在正式版中這裡可以匯出 PNG / 更新關聯'); hideKnowledgeModal()" class="px-5 py-2 bg-blue-600 text-white rounded-xl">更新關聯圖</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // ==================== DATA MODEL ====================
+        let chapters = [
+            {
+                id: "01",
+                chapter: "01",
+                title: "財務自由之前，你真正要先自由的是什麼？",
+                section: "序部",
+                status: "完成",
+                schedule: "已完成草稿",
+                content: "很多人以為財務自由就是有錢。\n\n但真正的財務自由，是你不再被金錢綁架你的時間、注意力與選擇權。\n\n在開始寫這本書之前，我問自己一個問題：\n\n「如果我現在已經有足夠的錢，我還會繼續做現在的工作嗎？」\n\n答案是否定的。\n\n這代表我現在的工作並不是出於完全的自由意志，而是出於對金錢的依賴。\n\n所以，財務自由的第一步，其實是「心態自由」與「時間自由」。",
+                wordCount: 1240,
+                added: 1240,
+                deleted: 0,
+                retention: 100,
+                rewrite: 0,
+                inspirationNotes: "從《原子習慣》與《窮爸爸富爸爸》的對照中得到啟發",
+                references: [
+                    { date: "2026-05-07", title: "貧窮思維 vs 豐盛思維" },
+                    { date: "2026-05-04", title: "為什麼加班文化讓人永遠無法財務自由" }
+                ],
+                illustration: "逃離與選擇對照圖",
+                lastSaved: "2026-05-31 19:10"
+            },
+            {
+                id: "02",
+                chapter: "02",
+                title: "當你腦中只有財富自由這四個字, 那只表示了你的沒有方向",
+                section: "序部",
+                status: "待寫",
+                schedule: "已完成草稿",
+                content: "很多人說自己想要財務自由，但如果再問深一點，他真正想說的可能是：我不想再上班了。\n\n不想再看主管臉色，不想再被會議追著跑，不想再為了薪水忍耐，不想把生活切得支離破碎。這些感覺都很真實，也很值得被理解。\n\n只是，「想逃離現在」和「具備財務自由的條件」，其實是兩件不同的事。\n\n舊文體曾提醒我：不要只看眼前的 30K，而要看到一份工作能不能帶來長期價值。努力工作不是為了把自己困在公司，而是為了累積功力、經驗與視野。這些東西如果能被整理，就會推你走向能力自由、工作自由，最後才比較可能走向財務自由。\n\n所以，問題不是你能不能討厭現在的工作。你當然可以。問題是，如果你只是想逃，卻沒有建立新的能力與選擇權，你離開一個地方後，很可能只是走進一個相似的困境。\n\n同樣的努力，換了不同的辦公室、同樣的困境，換了不同的老闆，還是逃不掉。",
+                wordCount: 874,
+                added: 124,
+                deleted: 38,
+                retention: 100,
+                rewrite: 12,
+                inspirationNotes: "",
+                references: [
+                    { date: "2026-05-16", title: "貧窮思維學院" },
+                    { date: "2026-05-06", title: "行銷戰術" },
+                    { date: "2026-05-04", title: "其他" }
+                ],
+                illustration: "逃離與選擇對照圖",
+                lastSaved: "2026-05-31 18:58"
+            },
+            {
+                id: "03",
+                chapter: "03",
+                title: "財務自由是一個目標，先拆成功條件",
+                section: "序部",
+                status: "待寫",
+                schedule: "待寫",
+                content: "財務自由從來不是單一事件，而是一連串正確決策累積的結果。\n\n要達到財務自由，需要同時滿足幾個關鍵條件：\n1. 現金流覆蓋生活開支\n2. 資產能持續增值\n3. 擁有可轉換的技能與人脈\n4. 心態上真正自由（不被物質綁架）\n\n很多人只做到第一點就以為成功了，其實只是「有錢的奴隸」而已。",
+                wordCount: 312,
+                added: 312,
+                deleted: 45,
+                retention: 87,
+                rewrite: 31,
+                inspirationNotes: "參考《The Psychology of Money》",
+                references: [],
+                illustration: "",
+                lastSaved: "2026-05-28 14:22"
+            },
+            {
+                id: "04",
+                chapter: "04",
+                title: "你不是不努力，是努力沒有變成累積",
+                section: "序部",
+                status: "待寫",
+                schedule: "待寫",
+                content: "",
+                wordCount: 0,
+                added: 0,
+                deleted: 0,
+                retention: 100,
+                rewrite: 0,
+                inspirationNotes: "",
+                references: [],
+                illustration: "",
+                lastSaved: ""
+            },
+            {
+                id: "05",
+                chapter: "05",
+                title: "能力自由，是財務自由之前的第一層底氣",
+                section: "序部",
+                status: "待寫",
+                schedule: "待寫",
+                content: "",
+                wordCount: 0,
+                added: 0,
+                deleted: 0,
+                retention: 100,
+                rewrite: 0,
+                inspirationNotes: "",
+                references: [],
+                illustration: "",
+                lastSaved: ""
+            }
+        ]
+        
+        let goldenQuotes = [
+            "任何事物的價格，都是你願意用多少生命去交換它。",
+            "財務自由不是有錢，而是你擁有選擇的權利。",
+            "努力工作不是為了困住自己，而是為了累積讓自己逃脫的資本。",
+            "當你只想逃離現在，你很可能只是走進另一個相同的牢籠。"
+        ]
+        
+        let currentChapterId = "02"
+        
+        // ==================== INITIALIZATION ====================
+        function init() {
+            // Load from localStorage if exists
+            const savedChapters = localStorage.getItem('chapters')
+            if (savedChapters) {
+                chapters = JSON.parse(savedChapters)
+            }
+            
+            const savedQuotes = localStorage.getItem('goldenQuotes')
+            if (savedQuotes) {
+                goldenQuotes = JSON.parse(savedQuotes)
+            }
+            
+            renderChapterList()
+            renderGoldenQuotes()
+            loadChapter(currentChapterId)
+            
+            // Initial word count
+            setTimeout(() => {
+                updateWordCount()
+            }, 300)
+            
+            // Keyboard shortcuts hint
+            document.addEventListener('keydown', function(e) {
+                if (e.ctrlKey && e.key === 's') {
+                    e.preventDefault()
+                    autoSave(true)
+                }
+                if (e.metaKey && e.key === 's') {
+                    e.preventDefault()
+                    autoSave(true)
+                }
+            })
+            
+            showToast("已載入本地寫作專案（資料儲存在瀏覽器）", 2800)
+        }
+        
+        function saveToLocalStorage() {
+            localStorage.setItem('chapters', JSON.stringify(chapters))
+            localStorage.setItem('goldenQuotes', JSON.stringify(goldenQuotes))
+        }
+        
+        // ==================== CHAPTER LIST (LEFT) ====================
+        function renderChapterList() {
+            const container = document.getElementById('序部-list') || createChapterListContainer()
+            
+            // We inject into left sidebar dynamically
+            const leftSidebar = document.querySelector('.col-span-12.lg\\:col-span-3')
+            if (!leftSidebar) return
+            
+            // Find or create the 序部 section
+            let orderSection = document.getElementById('order-section')
+            if (!orderSection) {
+                orderSection = document.createElement('div')
+                orderSection.id = 'order-section'
+                orderSection.className = `bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden mt-5`
+                
+                orderSection.innerHTML = `
+                    <div class="px-4 py-3 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
+                        <div>
+                            <span class="section-header flex items-center gap-x-2">
+                                <i class="fa-solid fa-list-ol text-blue-600"></i>
+                                序部
+                            </span>
+                            <span class="text-xs text-slate-500 ml-6">1/4 完成</span>
+                        </div>
+                        <button onclick="addNewChapter()" class="text-xs flex items-center px-2.5 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                            <i class="fa-solid fa-plus mr-1 text-xs"></i>
+                            <span class="text-xs">新增章</span>
+                        </button>
+                    </div>
+                    <div id="序部-list" class="p-1 text-sm divide-y divide-slate-100"></div>
+                `
+                leftSidebar.appendChild(orderSection)
+            }
+            
+            const listContainer = document.getElementById('序部-list')
+            listContainer.innerHTML = ''
+            
+            const orderChapters = chapters.filter(c => c.section === "序部")
+            
+            orderChapters.forEach(ch => {
+                const div = document.createElement('div')
+                div.className = `chapter-item flex items-center justify-between px-3 py-[9px] rounded-xl mx-1 cursor-pointer ${ch.id === currentChapterId ? 'active' : ''}`
+                
+                const statusClass = ch.status === '完成' ? 'status-完成' : 
+                                   ch.status === '待寫' ? 'status-待寫' : 'status-草稿完成'
+                
+                div.innerHTML = `
+                    <div class="flex items-center gap-x-3 flex-1 min-w-0" onclick="loadChapter('${ch.id}')">
+                        <div class="w-6 text-center">
+                            <span class="font-mono text-xs text-slate-400">${ch.chapter}</span>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="font-medium text-slate-800 text-[13.5px] leading-tight line-clamp-2 pr-1">${ch.title}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center gap-x-2 pl-2">
+                        <span class="status-badge ${statusClass}">${ch.status}</span>
+                        
+                        ${ch.wordCount > 0 ? 
+                            `<span class="font-mono text-[10px] text-slate-400 tabular-nums">${ch.wordCount}</span>` : 
+                            `<span class="text-[10px] text-slate-300">—</span>`
+                        }
+                    </div>
+                `
+                
+                listContainer.appendChild(div)
+            })
+        }
+        
+        function createChapterListContainer() {
+            // This function is just a placeholder in case needed
+            return document.createElement('div')
+        }
+        
+        // ==================== LOAD CHAPTER ====================
+        function loadChapter(chapterId) {
+            const chapter = chapters.find(c => c.id === chapterId)
+            if (!chapter) return
+            
+            currentChapterId = chapterId
+            
+            // Update editor
+            document.getElementById('article-title').value = chapter.title || ''
+            
+            const editor = document.getElementById('rich-editor')
+            editor.innerHTML = chapter.content ? chapter.content.replace(/\n/g, '<br>') : '<p class="text-slate-400">開始撰寫你的章節內容...</p>'
+            
+            // Update badge
+            const badge = document.getElementById('current-chapter-badge')
+            badge.innerHTML = `
+                <span class="font-mono">${chapter.chapter}</span> 
+                <span class="ml-1 opacity-75">• ${chapter.section}</span>
+            `
+            
+            // Update right panel
+            updateStatusPanel(chapter)
+            
+            // Re-render list to highlight active
+            renderChapterList()
+            
+            // Update word count
+            setTimeout(updateWordCount, 100)
+        }
+        
+        function updateStatusPanel(chapter) {
+            // Chapter title in status
+            document.getElementById('status-chapter').innerHTML = `${chapter.chapter} | ${chapter.title}`
+            
+            // Section
+            document.getElementById('status-section').innerHTML = chapter.section || '序部'
+            
+            // Schedule
+            document.getElementById('status-schedule').value = chapter.schedule || '待寫'
+            
+            // Status badge
+            const statusBadge = document.getElementById('article-status-badge')
+            statusBadge.className = `status-badge status-${chapter.status}`
+            statusBadge.textContent = chapter.status
+            
+            // Notes
+            const notesEl = document.getElementById('status-notes')
+            if (chapter.inspirationNotes && chapter.inspirationNotes.trim() !== '') {
+                notesEl.innerHTML = `<span class="line-clamp-1">${chapter.inspirationNotes}</span>`
+                notesEl.className = `text-xs px-2.5 py-0.5 bg-amber-100 text-amber-700 rounded max-w-[148px]`
+            } else {
+                notesEl.innerHTML = `尚無筆記`
+                notesEl.className = `text-xs px-2.5 py-0.5 bg-slate-100 text-slate-500 rounded`
+            }
+            
+            // Metrics
+            document.getElementById('status-wordcount').textContent = chapter.wordCount || 0
+            document.getElementById('status-added').textContent = `+${chapter.added || 0}`
+            document.getElementById('status-deleted').textContent = `-${chapter.deleted || 0}`
+            document.getElementById('status-retention').textContent = `${chapter.retention || 100}%`
+            document.getElementById('status-rewrite').textContent = `${chapter.rewrite || 0}%`
+            
+            // Progress bars
+            const retentionBar = document.getElementById('retention-bar')
+            retentionBar.style.width = `${chapter.retention || 100}%`
+            
+            const rewriteBar = document.getElementById('rewrite-bar')
+            rewriteBar.style.width = `${chapter.rewrite || 0}%`
+            
+            // References
+            renderReferences(chapter)
+        }
+        
+        function renderReferences(chapter) {
+            const container = document.getElementById('references-list')
+            container.innerHTML = ''
+            
+            if (!chapter.references || chapter.references.length === 0) {
+                container.innerHTML = `<div class="text-xs text-slate-400 px-1 py-0.5">尚無參考文獻</div>`
+                return
+            }
+            
+            chapter.references.forEach((ref, index) => {
+                const div = document.createElement('div')
+                div.className = `flex items-center justify-between px-2 py-1 hover:bg-slate-50 rounded text-xs group`
+                div.innerHTML = `
+                    <div class="flex items-center gap-x-2 min-w-0">
+                        <span class="font-mono text-[10px] text-slate-400">${ref.date}</span>
+                        <span class="truncate text-slate-700">${ref.title}</span>
+                    </div>
+                    <button onclick="removeReference(${index}); event.stopImmediatePropagation()" 
+                            class="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-600 px-1">
+                        <i class="fa-solid fa-times text-xs"></i>
+                    </button>
+                `
+                container.appendChild(div)
+            })
+        }
+        
+        // ==================== UPDATE CHAPTER ====================
+        function updateCurrentChapterTitle() {
+            const chapter = chapters.find(c => c.id === currentChapterId)
+            if (!chapter) return
+            
+            const newTitle = document.getElementById('article-title').value.trim()
+            if (newTitle && newTitle !== chapter.title) {
+                chapter.title = newTitle
+                saveToLocalStorage()
+                renderChapterList()
+            }
+        }
+        
+        function updateWordCount() {
+            const editor = document.getElementById('rich-editor')
+            const text = editor.innerText || editor.textContent || ''
+            
+            // Chinese character count + English word estimate
+            const chineseChars = (text.match(/[\u4e00-\u9fa5]/g) || []).length
+            const englishWords = text.split(/\s+/).filter(w => /[a-zA-Z]/.test(w)).length
+            const total = chineseChars + englishWords
+            
+            document.getElementById('word-count').textContent = total
+            
+            // Also update data model
+            const chapter = chapters.find(c => c.id === currentChapterId)
+            if (chapter) {
+                chapter.wordCount = total
+                // Update status panel live
+                const wcEl = document.getElementById('status-wordcount')
+                if (wcEl) wcEl.textContent = total
+            }
+        }
+        
+        function autoSave(showMessage = false) {
+            const chapter = chapters.find(c => c.id === currentChapterId)
+            if (!chapter) return
+            
+            const editor = document.getElementById('rich-editor')
+            const titleInput = document.getElementById('article-title')
+            
+            // Save content (convert <br> back to \n for storage)
+            let content = editor.innerHTML
+            content = content.replace(/<br\s*\/?>/gi, '\n')
+                           .replace(/<div>/gi, '\n')
+                           .replace(/<\/div>/gi, '')
+                           .replace(/&nbsp;/g, ' ')
+            
+            chapter.content = content.trim()
+            chapter.title = titleInput.value.trim()
+            
+            // Update timestamp
+            const now = new Date()
+            chapter.lastSaved = now.toISOString().slice(0, 16).replace('T', ' ')
+            
+            document.getElementById('last-saved-time').textContent = '剛剛'
+            
+            // Update word count in data
+            updateWordCount()
+            
+            saveToLocalStorage()
+            
+            if (showMessage) {
+                showToast("已手動儲存")
+            }
+            
+            // Refresh list in case title changed
+            renderChapterList()
+        }
+        
+        function updateChapterStatus() {
+            const chapter = chapters.find(c => c.id === currentChapterId)
+            if (!chapter) return
+            
+            const newSchedule = document.getElementById('status-schedule').value
+            chapter.schedule = newSchedule
+            
+            // Auto update status based on schedule
+            if (newSchedule === '已完成草稿' || newSchedule === '已完稿') {
+                chapter.status = '完成'
+            } else if (newSchedule === '待寫') {
+                chapter.status = '待寫'
+            } else {
+                chapter.status = '撰寫中'
+            }
+            
+            // Update badge
+            const statusBadge = document.getElementById('article-status-badge')
+            statusBadge.className = `status-badge status-${chapter.status}`
+            statusBadge.textContent = chapter.status
+            
+            saveToLocalStorage()
+            renderChapterList()
+        }
+        
+        // ==================== RICH TEXT FORMATTING ====================
+        function formatText(command, value = null) {
+            const editor = document.getElementById('rich-editor')
+            editor.focus()
+            
+            if (value) {
+                document.execCommand(command, false, value)
+            } else {
+                document.execCommand(command, false, null)
+            }
+            
+            // Trigger input event for auto save
+            setTimeout(() => {
+                autoSave()
+                updateWordCount()
+            }, 50)
+        }
+        
+        function formatHeading(level) {
+            const editor = document.getElementById('rich-editor')
+            editor.focus()
+            document.execCommand('formatBlock', false, `h${level}`)
+            setTimeout(autoSave, 80)
+        }
+        
+        function insertLink() {
+            const url = prompt('請輸入連結網址：', 'https://')
+            if (url) {
+                const editor = document.getElementById('rich-editor')
+                editor.focus()
+                document.execCommand('createLink', false, url)
+                setTimeout(autoSave, 50)
+            }
+        }
+        
+        // ==================== AI FEATURES (Simulated + Ready for real LLM) ====================
+        function aiSuggestRewrite() {
+            const chapter = chapters.find(c => c.id === currentChapterId)
+            if (!chapter) return
+            
+            const editor = document.getElementById('rich-editor')
+            const currentText = editor.innerText || ''
+            
+            if (!currentText.trim()) {
+                showToast("請先撰寫一些內容再使用 AI 改寫建議", 2200)
+                return
+            }
+            
+            // In real version: call LLM API here (Ollama / Grok / Claude / Qwen)
+            // For demo we provide a thoughtful rewrite suggestion
+            
+            const suggestions = [
+                "建議將開頭改為更強烈的問題式開頭，增加讀者代入感。",
+                "中間可加入一個具體案例（例如你自己的故事），讓抽象概念更具體。",
+                "結尾可以增加一個「行動呼籲」，告訴讀者接下來可以做什麼。",
+                "整體可再精簡 15% 的字數，刪除重複的「不想再...」句型。"
+            ]
+            
+            const modal = document.createElement('div')
+            modal.className = `fixed inset-0 bg-black/50 flex items-center justify-center z-[200]`
+            modal.innerHTML = `
+                <div class="bg-white w-full max-w-lg mx-4 rounded-3xl shadow-xl overflow-hidden">
+                    <div class="px-5 py-4 border-b flex items-center gap-x-2">
+                        <i class="fa-solid fa-magic text-violet-600"></i>
+                        <span class="font-semibold">AI 改寫建議（基於當前章節）</span>
+                    </div>
+                    
+                    <div class="p-5 space-y-3 text-sm">
+                        ${suggestions.map(s => `
+                            <div class="flex gap-x-3 p-3 bg-slate-50 rounded-2xl">
+                                <i class="fa-solid fa-lightbulb text-amber-500 mt-0.5"></i>
+                                <div class="text-slate-700">${s}</div>
+                            </div>
+                        `).join('')}
+                        
+                        <div class="pt-2 text-xs text-slate-500">
+                            提示：在真實版本中這裡會呼叫本地 LLM（如 Qwen3 或 Ollama）直接產生改寫後的版本，並計算「改寫幅度」。
+                        </div>
+                    </div>
+                    
+                    <div class="px-5 py-4 bg-slate-50 flex justify-end gap-x-3">
+                        <button onclick="this.closest('.fixed').remove()" class="px-5 py-2 text-sm">關閉</button>
+                        <button onclick="applyAISuggestion(this)" class="px-6 py-2 bg-violet-600 text-white rounded-2xl text-sm font-medium">套用建議並重新計算指標</button>
+                    </div>
+                </div>
+            `
+            document.body.appendChild(modal)
+        }
+        
+        function applyAISuggestion(btn) {
+            const modal = btn.closest('.fixed')
+            const chapter = chapters.find(c => c.id === currentChapterId)
+            if (!chapter) return modal.remove()
+            
+            // Simulate rewrite: increase rewrite %, reduce some word count slightly
+            chapter.rewrite = Math.min(100, (chapter.rewrite || 0) + 18)
+            chapter.retention = Math.max(70, (chapter.retention || 100) - 8)
+            chapter.deleted = (chapter.deleted || 0) + 27
+            chapter.added = (chapter.added || 0) + 41
+            
+            // Update UI
+            updateStatusPanel(chapter)
+            saveToLocalStorage()
+            
+            modal.remove()
+            showToast("已套用 AI 建議，寫作指標已更新")
+            
+            // In real app: actually replace content with LLM output
+        }
+        
+        function extractGoldenSentences() {
+            const editor = document.getElementById('rich-editor')
+            const text = editor.innerText || ''
+            
+            if (text.length < 60) {
+                showToast("內容太少，無法有效提取金句")
+                return
+            }
+            
+            // Simple heuristic extraction (in real version use LLM)
+            const sentences = text.split(/[。！？\n]+/).filter(s => s.trim().length > 18)
+            
+            if (sentences.length === 0) {
+                showToast("未找到適合的金句，請手動新增")
+                return
+            }
+            
+            // Pick 1-2 good ones
+            const picked = sentences.slice(0, 2)
+            
+            picked.forEach(sent => {
+                const clean = sent.trim()
+                if (clean.length > 12 && !goldenQuotes.includes(clean)) {
+                    goldenQuotes.unshift(clean)
+                }
+            })
+            
+            renderGoldenQuotes()
+            saveToLocalStorage()
+            
+            showToast(`已從本文提取 ${picked.length} 句金句到總結區`)
+        }
+        
+        // ==================== GOLDEN QUOTES ====================
+        function renderGoldenQuotes() {
+            const container = document.getElementById('golden-quotes-list')
+            if (!container) return
+            
+            container.innerHTML = ''
+            
+            goldenQuotes.slice(0, 4).forEach((quote, index) => {
+                const div = document.createElement('div')
+                div.className = `flex gap-x-2 text-xs group px-1 py-0.5`
+                div.innerHTML = `
+                    <div class="flex-1 text-slate-600 leading-snug">"${quote}"</div>
+                    <button onclick="removeGoldenQuote(${index}); event.stopImmediatePropagation()" 
+                            class="opacity-0 group-hover:opacity-100 text-red-300 hover:text-red-500 self-start mt-0.5">
+                        <i class="fa-solid fa-times text-xs"></i>
+                    </button>
+                `
+                container.appendChild(div)
+            })
+            
+            // Update count
+            const countEl = document.getElementById('quote-count')
+            if (countEl) countEl.textContent = goldenQuotes.length
+        }
+        
+        function addGoldenQuote() {
+            const quote = prompt('請輸入新的金句：')
+            if (quote && quote.trim().length > 5) {
+                goldenQuotes.unshift(quote.trim())
+                renderGoldenQuotes()
+                saveToLocalStorage()
+                showToast("金句已加入總結")
+            }
+        }
+        
+        function removeGoldenQuote(index) {
+            if (confirm('確定要刪除這句金句嗎？')) {
+                goldenQuotes.splice(index, 1)
+                renderGoldenQuotes()
+                saveToLocalStorage()
+            }
+        }
+        
+        // ==================== OTHER ACTIONS ====================
+        function editInspirationNotes() {
+            const chapter = chapters.find(c => c.id === currentChapterId)
+            if (!chapter) return
+            
+            const current = chapter.inspirationNotes || ''
+            const notes = prompt('編輯靈感筆記（會關聯到此章節）：', current)
+            
+            if (notes !== null) {
+                chapter.inspirationNotes = notes.trim()
+                updateStatusPanel(chapter)
+                saveToLocalStorage()
+            }
+        }
+        
+        function addReference() {
+            const chapter = chapters.find(c => c.id === currentChapterId)
+            if (!chapter) return
+            
+            const title = prompt('參考文章標題：')
+            if (!title) return
+            
+            const date = prompt('日期 (YYYY-MM-DD)：', new Date().toISOString().slice(0,10))
+            
+            if (!chapter.references) chapter.references = []
+            chapter.references.push({ date: date || '2026-05-31', title: title })
+            
+            updateStatusPanel(chapter)
+            saveToLocalStorage()
+        }
+        
+        function removeReference(index) {
+            const chapter = chapters.find(c => c.id === currentChapterId)
+            if (!chapter || !chapter.references) return
+            
+            if (confirm('移除此參考文獻？')) {
+                chapter.references.splice(index, 1)
+                updateStatusPanel(chapter)
+                saveToLocalStorage()
+            }
+        }
+        
+        function markAsCompleted() {
+            const chapter = chapters.find(c => c.id === currentChapterId)
+            if (!chapter) return
+            
+            chapter.status = '完成'
+            chapter.schedule = '已完稿'
+            
+            updateStatusPanel(chapter)
+            saveToLocalStorage()
+            renderChapterList()
+            
+            showToast("章節已標記為完成！")
+        }
+        
+        function deleteCurrentChapter() {
+            if (!confirm('確定要刪除目前章節？此操作無法復原。')) return
+            
+            const idx = chapters.findIndex(c => c.id === currentChapterId)
+            if (idx === -1) return
+            
+            chapters.splice(idx, 1)
+            
+            // Load another chapter
+            if (chapters.length > 0) {
+                currentChapterId = chapters[0].id
+                loadChapter(currentChapterId)
+            } else {
+                // No chapters left
+                document.getElementById('rich-editor').innerHTML = ''
+                document.getElementById('article-title').value = ''
+            }
+            
+            saveToLocalStorage()
+            renderChapterList()
+        }
+        
+        function addNewChapter() {
+            const newId = 'ch' + Date.now().toString().slice(-6)
+            const newChapterNum = String(chapters.filter(c => c.section === '序部').length + 1).padStart(2, '0')
+            
+            const newCh = {
+                id: newId,
+                chapter: newChapterNum,
+                title: "新章節標題（請編輯）",
+                section: "序部",
+                status: "待寫",
+                schedule: "待寫",
+                content: "",
+                wordCount: 0,
+                added: 0,
+                deleted: 0,
+                retention: 100,
+                rewrite: 0,
+                inspirationNotes: "",
+                references: [],
+                illustration: "",
+                lastSaved: ""
+            }
+            
+            chapters.push(newCh)
+            saveToLocalStorage()
+            renderChapterList()
+            
+            // Load it
+            setTimeout(() => {
+                loadChapter(newId)
+                // Focus title
+                document.getElementById('article-title').focus()
+                document.getElementById('article-title').select()
+            }, 80)
+        }
+        
+        // ==================== TOP BAR ACTIONS ====================
+        function jumpToToday() {
+            // In real app this would filter chapters written today or show daily goal
+            const todayChapters = chapters.filter(c => c.lastSaved && c.lastSaved.includes('2026-05-31'))
+            
+            if (todayChapters.length > 0) {
+                loadChapter(todayChapters[0].id)
+                showToast(`已跳轉至今日編輯的章節`)
+            } else {
+                // Show a nice daily writing prompt
+                const modal = document.createElement('div')
+                modal.className = `fixed inset-0 bg-black/40 flex items-end lg:items-center justify-center z-[150]`
+                modal.innerHTML = `
+                    <div class="bg-white w-full lg:w-[420px] lg:rounded-3xl lg:m-4 rounded-t-3xl p-6 shadow-xl">
+                        <div class="font-semibold text-lg flex items-center gap-x-2 mb-1">
+                            <i class="fa-solid fa-calendar-check text-emerald-600"></i>
+                            <span>今日寫作目標</span>
+                        </div>
+                        <div class="text-sm text-slate-600 mb-5">建議完成「能力自由」章節的 300 字草稿，並更新 2 個金句。</div>
+                        
+                        <div class="space-y-2">
+                            <button onclick="addNewChapter(); this.closest('.fixed').remove()" 
+                                    class="w-full py-3 bg-emerald-600 text-white rounded-2xl font-medium flex items-center justify-center gap-x-2">
+                                <i class="fa-solid fa-plus"></i>
+                                <span>建立今日新章節</span>
+                            </button>
+                            
+                            <button onclick="this.closest('.fixed').remove()" class="w-full py-3 text-sm text-slate-500">稍後再說</button>
+                        </div>
+                    </div>
+                `
+                document.body.appendChild(modal)
+            }
+        }
+        
+        function exportProgressJSON() {
+            const exportData = {
+                project: "財經自由之前",
+                exportDate: new Date().toISOString(),
+                totalChapters: chapters.length,
+                totalWords: chapters.reduce((sum, c) => sum + (c.wordCount || 0), 0),
+                goldenQuotes: goldenQuotes,
+                chapters: chapters
+            }
+            
+            const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' })
+            const url = URL.createObjectURL(blob)
+            
+            const a = document.createElement('a')
+            a.href = url
+            a.download = `財經自由之前_寫作進度_${new Date().toISOString().slice(0,10)}.json`
+            document.body.appendChild(a)
+            a.click()
+            document.body.removeChild(a)
+            URL.revokeObjectURL(url)
+            
+            showToast("進度已匯出為 JSON（可版本控管 / 備份 / 分析）")
+        }
+        
+        function showAllArticles() {
+            const modal = document.createElement('div')
+            modal.className = `fixed inset-0 bg-black/50 z-[200] flex items-center justify-center p-4`
+            
+            let html = `
+                <div onclick="event.target === this && this.remove()" class="bg-white w-full max-w-4xl rounded-3xl shadow-2xl max-h-[85vh] flex flex-col">
+                    <div class="px-6 py-4 border-b flex items-center justify-between">
+                        <div class="font-semibold text-xl">全部文章清單</div>
+                        <button onclick="this.closest('.fixed').remove()" class="text-3xl leading-none text-slate-300 hover:text-slate-500">×</button>
+                    </div>
+                    
+                    <div class="overflow-auto flex-1 p-2">
+                        <table class="w-full text-sm">
+                            <thead class="bg-slate-50 sticky top-0">
+                                <tr class="text-left text-xs text-slate-500">
+                                    <th class="px-4 py-3 font-normal">章節</th>
+                                    <th class="px-4 py-3 font-normal">標題</th>
+                                    <th class="px-4 py-3 font-normal">狀態</th>
+                                    <th class="px-4 py-3 font-normal text-right">字數</th>
+                                    <th class="px-4 py-3 font-normal">最後編輯</th>
+                                    <th class="px-4 py-3"></th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y">
+            `
+            
+            chapters.forEach(ch => {
+                const statusColor = ch.status === '完成' ? 'emerald' : ch.status === '待寫' ? 'amber' : 'blue'
+                html += `
+                    <tr class="hover:bg-slate-50 cursor-pointer" onclick="loadChapter('${ch.id}'); this.closest('.fixed').remove()">
+                        <td class="px-4 py-3 font-mono text-xs text-slate-400">${ch.chapter}</td>
+                        <td class="px-4 py-3 font-medium pr-8">${ch.title}</td>
+                        <td class="px-4 py-3">
+                            <span class="px-3 py-0.5 text-xs rounded-full bg-${statusColor}-100 text-${statusColor}-700">${ch.status}</span>
+                        </td>
+                        <td class="px-4 py-3 text-right font-mono text-xs">${ch.wordCount || 0}</td>
+                        <td class="px-4 py-3 text-xs text-slate-500">${ch.lastSaved || '—'}</td>
+                        <td class="px-4 py-3 text-right">
+                            <button onclick="event.stopImmediatePropagation(); loadChapter('${ch.id}'); this.closest('.fixed').remove()" 
+                                    class="text-xs px-4 py-1 bg-blue-600 text-white rounded-xl">編輯</button>
+                        </td>
+                    </tr>
+                `
+            })
+            
+            html += `</tbody></table></div></div>`
+            modal.innerHTML = html
+            document.body.appendChild(modal)
+        }
+        
+        // ==================== MODALS ====================
+        function showKnowledgeGraphModal() {
+            document.getElementById('knowledge-modal').classList.remove('hidden')
+            document.getElementById('knowledge-modal').classList.add('flex')
+        }
+        
+        function hideKnowledgeModal() {
+            const m = document.getElementById('knowledge-modal')
+            m.classList.remove('flex')
+            m.classList.add('hidden')
+        }
+        
+        function showIllustrationModal() {
+            const chapter = chapters.find(c => c.id === currentChapterId)
+            alert(`在完整版本中這裡會開啟圖片編輯器或上傳新圖解。\n\n目前章節關聯圖解：${chapter.illustration || '無'}`)
+            
+            // Future: integrate with image upload + AI captioning
+        }
+        
+        function highlightConcept(element, concept) {
+            // Simple interaction for demo
+            document.querySelectorAll('.knowledge-node').forEach(el => el.classList.remove('ring-2', 'ring-offset-2', 'ring-blue-400'))
+            element.classList.add('ring-2', 'ring-offset-2', 'ring-blue-400')
+            
+            setTimeout(() => {
+                element.classList.remove('ring-2', 'ring-offset-2', 'ring-blue-400')
+            }, 1400)
+            
+            // In real version: filter chapters or show related content
+            showToast(`已高亮概念：「${concept}」相關章節已篩選（示範功能）`)
+        }
+        
+        function jumpToSection(sectionName) {
+            const firstInSection = chapters.find(c => c.section === sectionName)
+            if (firstInSection) {
+                loadChapter(firstInSection.id)
+            } else {
+                showToast(`「${sectionName}」目前沒有章節`)
+            }
+        }
+        
+        // ==================== UTILITIES ====================
+        function showToast(message, duration = 2400) {
+            const toast = document.getElementById('toast')
+            const msgEl = document.getElementById('toast-message')
+            
+            msgEl.textContent = message
+            toast.style.display = 'flex'
+            toast.classList.remove('hidden')
+            
+            setTimeout(() => {
+                toast.style.transition = 'all 0.2s'
+                toast.style.opacity = '0'
+                
+                setTimeout(() => {
+                    toast.style.opacity = '1'
+                    toast.style.transition = ''
+                    toast.style.display = 'none'
+                    toast.classList.add('hidden')
+                }, 180)
+            }, duration)
+        }
+        
+        function updateRetentionAndRewrite() {
+            // This can be called periodically or on content change for more advanced metrics
+            // For now it's manual via AI button
+        }
+        
+        // ==================== BOOT ====================
+        window.onload = function() {
+            init()
+            
+            // Easter egg / tip for power users
+            setTimeout(() => {
+                const tip = document.createElement('div')
+                tip.style.cssText = 'position:fixed;bottom:18px;left:50%;transform:translateX(-50%);font-size:10px;color:#64748b;background:white;border:1px solid #e2e8f0;border-radius:9999px;padding:2px 11px 2px 12px;box-shadow:0 1px 2px rgb(0 0 0 / 0.03)'
+                tip.innerHTML = `提示：按 <span class="font-mono bg-slate-100 px-1 rounded">Ctrl+S</span> 手動儲存 • 資料存在瀏覽器 localStorage`
+                
+                document.body.appendChild(tip)
+                
+                setTimeout(() => {
+                    if (tip && tip.parentNode) tip.parentNode.removeChild(tip)
+                }, 5200)
+            }, 8500)
+        }
+        
+        // Expose some functions for debugging / extension
+        window.WRITING_APP = {
+            getChapters: () => chapters,
+            loadChapter: (id) => loadChapter(id),
+            exportData: () => { exportProgressJSON() }
+        }
+    </script>
+</body>
+</html>

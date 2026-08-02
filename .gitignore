@@ -1,0 +1,35 @@
+# Dependencies
+node_modules/
+
+# Build
+dist/
+src-tauri/target/
+
+# Logs / cache
+*.log
+npm-debug.log*
+.DS_Store
+Thumbs.db
+
+# Env / secrets
+.env
+.env.*
+!.env.example
+
+# Editor / OS
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.swp
+*.swo
+
+# OpenCode local runtime (not part of app source)
+.opencode/memory/
+.opencode/status-footer/
+
+# Test / coverage
+coverage/
+
+# Tauri / Rust
+**/*.rs.bk
+src-tauri/WixTools/

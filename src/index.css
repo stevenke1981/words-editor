@@ -1,0 +1,147 @@
+/* Tailwind directives removed for build compatibility.
+   Demo UI uses Tailwind via CDN (https://cdn.tailwindcss.com) loaded in index.html.
+   All utility classes in App.tsx will work at runtime in dev.
+   Custom styles below are preserved from prototype. */
+:root {
+  --primary: #2563eb;
+}
+
+body {
+  font-family: 'Noto Sans TC', 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+.app-container {
+  background-color: #f8fafc;
+  min-height: 100vh;
+}
+
+.sidebar {
+  background-color: #ffffff;
+  border-right: 1px solid #e2e8f0;
+}
+
+.main-editor {
+  background-color: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.status-panel {
+  background-color: #ffffff;
+  border-left: 1px solid #e2e8f0;
+}
+
+.section-header {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #475569;
+  letter-spacing: 0.025em;
+}
+
+.knowledge-node {
+  transition: all 0.1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.knowledge-node:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.knowledge-node.selected {
+  ring: 2px;
+  ring-offset: 2px;
+  ring-color: #3b82f6;
+}
+
+.chapter-item {
+  transition: all 0.1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.chapter-item:hover {
+  background-color: #f1f5f9;
+  transform: translateX(2px);
+}
+
+.chapter-item.active {
+  background-color: #eff6ff;
+  border-left: 3px solid #2563eb;
+}
+
+.status-badge {
+  font-size: 0.75rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  font-weight: 500;
+}
+
+.status-完成 {
+  background-color: #dcfce7;
+  color: #166534;
+}
+
+.status-待寫 {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.status-草稿 {
+  background-color: #dbeafe;
+  color: #1e40af;
+}
+
+.rich-editor {
+  min-height: 420px;
+  padding: 1.25rem;
+  line-height: 1.8;
+  font-size: 15px;
+  color: #1e293b;
+  outline: none;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  background: white;
+}
+
+.rich-editor:focus {
+  border-color: #93c5fd;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.graph-container {
+  background-color: #f8fafc;
+  border-radius: 0.75rem;
+  overflow: hidden;
+}
+
+.graph-svg {
+  cursor: grab;
+}
+
+.graph-svg:active {
+  cursor: grabbing;
+}
+
+.node {
+  cursor: pointer;
+  transition: filter 0.1s ease;
+}
+
+.node:hover {
+  filter: brightness(1.1);
+}
+
+.node.selected circle,
+.node.selected rect {
+  stroke: #3b82f6;
+  stroke-width: 3;
+}
+
+.edge {
+  stroke: #94a3b8;
+  stroke-width: 1.5;
+  stroke-opacity: 0.7;
+}
+
+.edge.highlighted {
+  stroke: #3b82f6;
+  stroke-width: 2.5;
+  stroke-opacity: 1;
+}
