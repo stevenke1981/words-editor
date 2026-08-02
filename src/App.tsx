@@ -950,7 +950,7 @@ function App() {
               <div>
                 <div className="font-semibold text-lg flex items-center gap-x-2">📋 選擇寫作模板</div>
                 <div className="text-xs text-slate-500 mt-0.5">
-                  不限財經：通用文章、技術、部落格、報導、文案、隨筆、學術、指南、旅行等。套用會替換目前專案內容。
+                  {allTemplates.length} 種寫作範例：小說、演講、書評、專訪、電子報、案例、社群、提案、兒童、社論、科幻等。套用會替換目前專案內容。
                 </div>
               </div>
               <button onClick={() => setIsTemplateOpen(false)} className="text-3xl leading-none text-slate-400 hover:text-slate-600">×</button>

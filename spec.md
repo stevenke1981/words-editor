@@ -63,7 +63,7 @@
 
 `status`：`待寫` | `草稿` | `完成`
 
-### 2.4 寫作模板（MVP）
+### 2.4 寫作模板（範例庫）
 
 | ID | 名稱 | 文體 |
 |----|------|------|
@@ -77,6 +77,20 @@
 | `academic-outline` | 學術／報告大綱 | 學術寫作 |
 | `howto-guide` | How-to 指南 | 實用指南 |
 | `travel-story` | 旅行／紀實 | 旅行紀實 |
+| `short-story` | 短篇小說 | 虛構敘事 |
+| `speech-script` | 演講稿 | 演說稿 |
+| `book-review` | 書評／影評 | 評論寫作 |
+| `interview-profile` | 人物專訪 | 訪談寫作 |
+| `email-newsletter` | 電子報 | 電子報 |
+| `case-study` | 案例研究 | 商業案例 |
+| `social-thread` | 社群串文 | 社群內容 |
+| `business-proposal` | 企劃／提案 | 商務寫作 |
+| `children-story` | 兒童故事 | 兒童文學 |
+| `op-ed` | 專欄／社論 | 意見專欄 |
+| `meeting-notes` | 會議紀錄 | 職場文件 |
+| `sci-fi-flash` | 科幻極短篇 | 科幻虛構 |
+
+每個模板需提供：可讀的範例段落（非空骨架）、知識圖節點、可選金句。
 
 ## 3. 核心功能規格
 
