@@ -24,8 +24,10 @@ Thumbs.db
 *.swo
 
 # OpenCode local runtime (not part of app source)
-.opencode/memory/
-.opencode/status-footer/
+.opencode/
+
+# Local Qwen/OpenCode permissions (machine-specific)
+.qwen/
 
 # Test / coverage
 coverage/

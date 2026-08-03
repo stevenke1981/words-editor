@@ -3,11 +3,25 @@
 > 審查日期：2026-08-03
 > 審查範圍：src/ 全部原始碼、設定檔、測試、建構流程
 
+## 2026-08-03 改善後重新驗證
+
+本文件下方保留原始審查內容作為歷史基線；以下項目已在本輪改善中落地：
+
+- `useBook` 已抽出版本化儲存 adapter，支援 legacy key 遷移、JSON schema 正規化、匯入驗證、debounce autosave 與離開頁面前 flush。
+- contentEditable 現在只將純文字寫回資料模型，渲染時會 escape HTML；主要 Modal、章節導覽與知識圖節點補上鍵盤操作與明確按鈕型別。
+- Agent HTTP adapter 已區分瀏覽器／測試與 Tauri runtime；瀏覽器測試不再被動態 Tauri import 劫持，Tauri capability/CSP 改為明確 provider allowlist。
+- Agent UI 已提供完整管線、Editor 單階段套用，以及 Visualizer 單階段結果預覽；service `PipelineOptions` 可限制 stages。
+- TopBar 已接上全書 Word、全書 PDF、Markdown 匯出與儲存狀態；`exportService` 的全書 API 已可由 UI 觸發。
+- Web／Tauri UI PDF 已改走瀏覽器平台字型的 html2canvas raster 路徑，實際繁中瀏覽器驗收可讀；若 raster 失敗會直接回報錯誤，不會偷偷產生帶有 CJK 警告的錯誤 PDF。同步 jsPDF API 仍保留 CJK 字型限制。
+- Biome lint、Vitest、Vite build 與 Rust `cargo check` 均已重新執行並通過（完整命令與限制見交付回報）。
+
+仍待後續處理：Tauri provider smoke test、長文編輯器的結構化格式模型，以及在封裝 Tauri 產物內點擊 PDF 的最終 smoke test（目前已完成封裝 exe 啟動驗收）。以下原始章節中若再次提到上述已完成項目，請以本節為準。
+
 ---
 
 ## 一、整體評價
 
-專案在 Phase 1 已達成核心目標：三欄布局、多文體模板（22 種）、知識圖互動、6 階段 Agent 管線、三種匯出格式。模板資料豐富且測試涵蓋了基本結構驗證。以下依優先順序列出改善建議。
+專案在 Phase 1 已達成核心目標：三欄布局、多文體模板（22 種）、知識圖互動、6 階段 Agent 管線、四種匯出／備份格式。模板資料豐富且測試涵蓋了基本結構驗證。以下依優先順序列出改善建議。
 
 ---
 

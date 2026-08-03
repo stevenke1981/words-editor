@@ -3,7 +3,7 @@
  * Finance is one option among many; default is general article writing.
  */
 
-import type { Book, Chapter, KnowledgeGraphData, GoldenQuote } from '../types';
+import type { Book, Chapter, GoldenQuote, KnowledgeGraphData } from '../types';
 
 export type TemplateId =
   | 'general-article'
@@ -50,13 +50,16 @@ function nowStamp(): string {
 }
 
 function chapter(
-  partial: Omit<Chapter, 'added' | 'deleted' | 'retention' | 'rewrite' | 'lastSaved' | 'wordCount'> & {
+  partial: Omit<
+    Chapter,
+    'added' | 'deleted' | 'retention' | 'rewrite' | 'lastSaved' | 'wordCount'
+  > & {
     wordCount?: number;
     added?: number;
     deleted?: number;
     retention?: number;
     rewrite?: number;
-  }
+  },
 ): Chapter {
   const content = partial.content || '';
   const chinese = (content.match(/[\u4e00-\u9fa5]/g) || []).length;
@@ -75,7 +78,7 @@ function chapter(
 
 function graph(
   nodes: Array<{ id: string; label: string; x: number; y: number; color: string }>,
-  edges: Array<{ id: string; source: string; target: string }>
+  edges: Array<{ id: string; source: string; target: string }>,
 ): KnowledgeGraphData {
   return {
     nodes: nodes.map((n) => ({ ...n, type: 'concept' as const })),
@@ -147,7 +150,7 @@ const TEMPLATES: WritingTemplate[] = [
           { id: 'e2', source: 'k2', target: 'k3' },
           { id: 'e3', source: 'k1', target: 'k4' },
           { id: 'e4', source: 'k2', target: 'k5' },
-        ]
+        ],
       ),
       goldenQuotes: quotes([
         { id: 'q1', text: '好文章先回答：讀者為什麼要花時間讀你？', chapterId: '01' },
@@ -199,7 +202,8 @@ const TEMPLATES: WritingTemplate[] = [
           title: '財務自由是一個目標，先拆成功條件',
           section: '序部',
           status: '草稿',
-          content: '財務自由不是單一事件，而是一系列可重複的條件累積。\n\n心態、能力、資產、系統，四層結構。',
+          content:
+            '財務自由不是單一事件，而是一系列可重複的條件累積。\n\n心態、能力、資產、系統，四層結構。',
         }),
       ],
       knowledgeGraph: graph(
@@ -218,7 +222,7 @@ const TEMPLATES: WritingTemplate[] = [
           { id: 'e4', source: 'k2', target: 'k6' },
           { id: 'e5', source: 'k3', target: 'k5' },
           { id: 'e6', source: 'k4', target: 'k1' },
-        ]
+        ],
       ),
       goldenQuotes: quotes([
         {
@@ -297,7 +301,7 @@ const TEMPLATES: WritingTemplate[] = [
           { id: 'e2', source: 'k2', target: 'k3' },
           { id: 'e3', source: 'k3', target: 'k4' },
           { id: 'e4', source: 'k3', target: 'k5' },
-        ]
+        ],
       ),
       goldenQuotes: quotes([
         { id: 'q1', text: '好的教學文讓讀者能在不看你的情況下重現結果。', chapterId: '01' },
@@ -364,7 +368,7 @@ const TEMPLATES: WritingTemplate[] = [
           { id: 'e1', source: 'k2', target: 'k1' },
           { id: 'e2', source: 'k1', target: 'k3' },
           { id: 'e3', source: 'k3', target: 'k4' },
-        ]
+        ],
       ),
       goldenQuotes: [],
     }),
@@ -429,7 +433,7 @@ const TEMPLATES: WritingTemplate[] = [
           { id: 'e1', source: 'k1', target: 'k2' },
           { id: 'e2', source: 'k1', target: 'k3' },
           { id: 'e3', source: 'k3', target: 'k4' },
-        ]
+        ],
       ),
       goldenQuotes: [],
     }),
@@ -494,9 +498,11 @@ const TEMPLATES: WritingTemplate[] = [
           { id: 'e1', source: 'k1', target: 'k2' },
           { id: 'e2', source: 'k2', target: 'k3' },
           { id: 'e3', source: 'k3', target: 'k4' },
-        ]
+        ],
       ),
-      goldenQuotes: quotes([{ id: 'q1', text: '文案不是寫產品，是寫讀者變好的樣子。', chapterId: '01' }]),
+      goldenQuotes: quotes([
+        { id: 'q1', text: '文案不是寫產品，是寫讀者變好的樣子。', chapterId: '01' },
+      ]),
     }),
   },
   {
@@ -551,7 +557,7 @@ const TEMPLATES: WritingTemplate[] = [
           { id: 'e1', source: 'k1', target: 'k2' },
           { id: 'e2', source: 'k2', target: 'k3' },
           { id: 'e3', source: 'k3', target: 'k4' },
-        ]
+        ],
       ),
       goldenQuotes: [],
     }),
@@ -624,7 +630,7 @@ const TEMPLATES: WritingTemplate[] = [
           { id: 'e1', source: 'k2', target: 'k1' },
           { id: 'e2', source: 'k1', target: 'k3' },
           { id: 'e3', source: 'k3', target: 'k4' },
-        ]
+        ],
       ),
       goldenQuotes: [],
     }),
@@ -689,7 +695,7 @@ const TEMPLATES: WritingTemplate[] = [
           { id: 'e1', source: 'k1', target: 'k2' },
           { id: 'e2', source: 'k2', target: 'k3' },
           { id: 'e3', source: 'k3', target: 'k4' },
-        ]
+        ],
       ),
       goldenQuotes: [],
     }),
@@ -754,7 +760,7 @@ const TEMPLATES: WritingTemplate[] = [
           { id: 'e1', source: 'k1', target: 'k2' },
           { id: 'e2', source: 'k2', target: 'k3' },
           { id: 'e3', source: 'k3', target: 'k4' },
-        ]
+        ],
       ),
       goldenQuotes: [],
     }),
@@ -827,7 +833,7 @@ const TEMPLATES: WritingTemplate[] = [
           { id: 'e2', source: 'k2', target: 'k3' },
           { id: 'e3', source: 'k3', target: 'k4' },
           { id: 'e4', source: 'k4', target: 'k5' },
-        ]
+        ],
       ),
       goldenQuotes: quotes([
         { id: 'q1', text: '城市很大，理論上夠用。理論總是在便利商店失效。', chapterId: '02' },
@@ -898,7 +904,7 @@ const TEMPLATES: WritingTemplate[] = [
           { id: 'e1', source: 'k1', target: 'k2' },
           { id: 'e2', source: 'k2', target: 'k3' },
           { id: 'e3', source: 'k3', target: 'k4' },
-        ]
+        ],
       ),
       goldenQuotes: quotes([
         {
@@ -973,7 +979,7 @@ const TEMPLATES: WritingTemplate[] = [
           { id: 'e1', source: 'k1', target: 'k2' },
           { id: 'e2', source: 'k1', target: 'k3' },
           { id: 'e3', source: 'k2', target: 'k4' },
-        ]
+        ],
       ),
       goldenQuotes: quotes([
         { id: 'q1', text: '你可以只拿走兩樣工具，明天就用。', chapterId: '02' },
@@ -1044,7 +1050,7 @@ const TEMPLATES: WritingTemplate[] = [
           { id: 'e1', source: 'k2', target: 'k1' },
           { id: 'e2', source: 'k1', target: 'k3' },
           { id: 'e3', source: 'k3', target: 'k4' },
-        ]
+        ],
       ),
       goldenQuotes: quotes([
         { id: 'q1', text: '我們賣的其實是「被允許慢慢挑」的權利。', chapterId: '02' },
@@ -1115,11 +1121,9 @@ const TEMPLATES: WritingTemplate[] = [
           { id: 'e1', source: 'k1', target: 'k2' },
           { id: 'e2', source: 'k2', target: 'k3' },
           { id: 'e3', source: 'k3', target: 'k4' },
-        ]
+        ],
       ),
-      goldenQuotes: quotes([
-        { id: 'q1', text: '寫很差的草稿，也比空白高貴。', chapterId: '04' },
-      ]),
+      goldenQuotes: quotes([{ id: 'q1', text: '寫很差的草稿，也比空白高貴。', chapterId: '04' }]),
     }),
   },
   {
@@ -1186,11 +1190,9 @@ const TEMPLATES: WritingTemplate[] = [
           { id: 'e1', source: 'k1', target: 'k2' },
           { id: 'e2', source: 'k2', target: 'k3' },
           { id: 'e3', source: 'k3', target: 'k4' },
-        ]
+        ],
       ),
-      goldenQuotes: quotes([
-        { id: 'q1', text: '前 50 字決定去留。', chapterId: '04' },
-      ]),
+      goldenQuotes: quotes([{ id: 'q1', text: '前 50 字決定去留。', chapterId: '04' }]),
     }),
   },
   {
@@ -1255,7 +1257,7 @@ const TEMPLATES: WritingTemplate[] = [
         [
           { id: 'e1', source: 'k1', target: 'k2' },
           { id: 'e2', source: 'k2', target: 'k3' },
-        ]
+        ],
       ),
       goldenQuotes: quotes([
         { id: 'q1', text: '寫作最耗的不是文筆，是決定寫什麼。', chapterId: '01' },
@@ -1326,7 +1328,7 @@ const TEMPLATES: WritingTemplate[] = [
           { id: 'e1', source: 'k1', target: 'k2' },
           { id: 'e2', source: 'k2', target: 'k3' },
           { id: 'e3', source: 'k2', target: 'k4' },
-        ]
+        ],
       ),
       goldenQuotes: [],
     }),
@@ -1395,11 +1397,9 @@ const TEMPLATES: WritingTemplate[] = [
           { id: 'e1', source: 'k1', target: 'k2' },
           { id: 'e2', source: 'k2', target: 'k3' },
           { id: 'e3', source: 'k3', target: 'k4' },
-        ]
+        ],
       ),
-      goldenQuotes: quotes([
-        { id: 'q1', text: '我可以一點一點地行。', chapterId: '04' },
-      ]),
+      goldenQuotes: quotes([{ id: 'q1', text: '我可以一點一點地行。', chapterId: '04' }]),
     }),
   },
   {
@@ -1466,7 +1466,7 @@ const TEMPLATES: WritingTemplate[] = [
           { id: 'e1', source: 'k1', target: 'k2' },
           { id: 'e2', source: 'k2', target: 'k3' },
           { id: 'e3', source: 'k2', target: 'k4' },
-        ]
+        ],
       ),
       goldenQuotes: quotes([
         {
@@ -1539,7 +1539,7 @@ const TEMPLATES: WritingTemplate[] = [
         [
           { id: 'e1', source: 'k1', target: 'k2' },
           { id: 'e2', source: 'k2', target: 'k3' },
-        ]
+        ],
       ),
       goldenQuotes: [],
     }),
@@ -1608,11 +1608,9 @@ const TEMPLATES: WritingTemplate[] = [
           { id: 'e1', source: 'k1', target: 'k2' },
           { id: 'e2', source: 'k2', target: 'k3' },
           { id: 'e3', source: 'k3', target: 'k4' },
-        ]
+        ],
       ),
-      goldenQuotes: quotes([
-        { id: 'q1', text: '遺忘要付費，記得卻免費。', chapterId: '01' },
-      ]),
+      goldenQuotes: quotes([{ id: 'q1', text: '遺忘要付費，記得卻免費。', chapterId: '01' }]),
     }),
   },
 ];

@@ -13,9 +13,9 @@
 | **三欄布局** | 知識圖 / 編輯器 / 狀態與指標 |
 | **知識關聯圖** | 原生 SVG：拖曳、縮放、平移、點擊 |
 | **金句與參考** | 章節關聯金句、靈感筆記、參考資料 |
-| **匯出** | JSON 備份、Word (`.docx`)、PDF |
-| **AI Agent** | Architect → Research → Writer → Editor → Reviewer → Visualizer |
-| **LLM 提供者** | DeepSeek、OpenRouter、本地 Ollama |
+| **匯出** | JSON 備份、單章／全書 Word (`.docx`)、PDF、Markdown |
+| **AI Agent** | Architect → Research → Writer → Editor → Reviewer → Visualizer；可單獨執行 Editor／Visualizer |
+| **LLM 提供者** | DeepSeek、OpenRouter、Qwen、Sakana、Gemini、本地 Ollama |
 | **桌面** | 可選 Tauri 2 打包 |
 
 ## 快速開始
@@ -77,7 +77,7 @@ npm run tauri dev
 ## AI 設定
 
 1. 點 **⚙ 設定**
-2. 選擇 DeepSeek / OpenRouter / Ollama
+2. 選擇 DeepSeek / OpenRouter / Qwen / Sakana / Gemini / Ollama
 3. 填入 API Key（僅存本機 `localStorage`，不上傳）
 4. 使用 **✨ AI 改寫建議** 時，會依目前模板的文體／主題調整提示詞
 
@@ -92,7 +92,7 @@ src/
   types.ts                # 資料模型
   services/
     agentService.ts       # 6 階段 Agent + LLM
-    exportService.ts      # Word / PDF
+    exportService.ts      # Word / PDF / Markdown
   components/
     KnowledgeGraph.tsx    # SVG 知識圖
 src-tauri/                # Tauri 桌面殼
@@ -112,7 +112,12 @@ spec.md / plan.md         # 規格與路線圖
 }
 ```
 
-專案內容會自動寫入瀏覽器 `localStorage`（鍵名 `wordsEditorProject`）。
+專案內容會以版本化 envelope 自動寫入瀏覽器 `localStorage`（鍵名 `wordsEditor:project`）。舊版
+`wordsEditorProject` 會在載入時自動遷移；可用頂部 **匯出 JSON** 建立可攜式備份，再以
+**匯入 JSON** 還原。
+
+Web／Tauri UI 的 PDF 匯出會使用瀏覽器平台字型 rasterize，再交由 jsPDF 分頁，因此可保留繁體中文；
+若直接呼叫 `exportToPdf` 等同步 service API，仍需自行註冊 Noto Sans TC 等 CJK 字型。若 UI raster 渲染失敗會直接報錯，不會產生帶有 CJK 警告的錯誤 PDF。Word 與 Markdown 匯出不受此限制。
 
 ## 技術堆疊
 

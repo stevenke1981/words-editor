@@ -21,8 +21,8 @@
 
 - 專案標題（可重新命名）
 - **模板選擇**（多文體）
-- 匯出 JSON / Word / PDF
-- API 設定（DeepSeek / OpenRouter / Ollama）
+- 匯出／匯入 JSON、單章與全書 Word／PDF／Markdown
+- API 設定（DeepSeek / OpenRouter / Qwen / Sakana / Gemini / Ollama）
 - 展開知識圖
 
 ### 2.3 資料模型
@@ -104,7 +104,7 @@
 
 - 粗體、斜體、引用（MVP）
 - 即時字數（中文字 + 英文單字）
-- 自動儲存（本機 `localStorage`）
+- 版本化自動儲存（本機 `localStorage`，含 legacy key 遷移與離開頁面前 flush）
 - AI 改寫建議（文體感知）
 
 ### 3.3 寫作指標

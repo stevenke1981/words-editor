@@ -4,31 +4,34 @@
  * Provides clean export using pre-installed docx + jspdf packages.
  * Follows project style: functional, explicit, Chinese-first.
  *
- * ## CJK PDF Limitation
+ * ## CJK PDF paths
  * jsPDF's built-in fonts (helvetica, times, courier) do NOT contain CJK glyphs.
- * For production CJK PDF output, embed Noto Sans TC via:
+ * The browser/Tauri UI therefore uses `html2canvas` with the platform font stack
+ * and rasterizes the page before jsPDF pagination. Direct synchronous service
+ * callers can still embed Noto Sans TC via:
  * ```ts
  * doc.addFileToVFS('NotoSansTC-Regular.ttf', base64FontData);
  * doc.addFont('NotoSansTC-Regular.ttf', 'NotoSansTC', 'normal');
  * doc.setFont('NotoSansTC');
  * ```
- * This service detects CJK content and adds a warning watermark when no CJK font
- * is embedded. When a CJK font IS provided (e.g. Phase 2 Tauri bundling), the
- * code path activates automatically via `registerCJKFont()`.
+ * The synchronous fallback detects CJK content and adds a warning watermark
+ * when no CJK font is embedded. When a CJK font IS provided, the code path
+ * activates automatically via `registerCJKFont()`.
  *
  * Co-Authored-By: Qwen Code (implementation)
  */
 
 import {
-  Document,
-  Packer,
-  Paragraph,
-  TextRun,
-  HeadingLevel,
-  PageBreak,
-  TableOfContents,
   AlignmentType,
+  Document,
+  HeadingLevel,
+  Packer,
+  PageBreak,
+  Paragraph,
+  TableOfContents,
+  TextRun,
 } from 'docx';
+import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import type { Book, Chapter } from '../types';
 
@@ -109,19 +112,18 @@ function addCJKWarning(doc: jsPDF): void {
   doc.saveGraphicsState();
   try {
     // GState provides transparency; typed in jsPDF v4+ but may need cast in older type defs
-    const gstate = new (doc as unknown as { GState: new (o: Record<string, number>) => unknown }).GState({ opacity: 0.2 });
+    const gstate = new (
+      doc as unknown as { GState: new (o: Record<string, number>) => unknown }
+    ).GState({ opacity: 0.2 });
     doc.setGState(gstate as never);
   } catch {
     // If GState is unavailable, proceed without transparency
   }
   doc.setFontSize(13);
   doc.setTextColor(200, 50, 50);
-  doc.text(
-    'CJK font not embedded - install Noto Sans TC for full support',
-    pageWidth / 2,
-    10,
-    { align: 'center' }
-  );
+  doc.text('CJK font not embedded - install Noto Sans TC for full support', pageWidth / 2, 10, {
+    align: 'center',
+  });
   doc.setTextColor(0, 0, 0);
   doc.restoreGraphicsState();
 }
@@ -134,13 +136,172 @@ const PDF_MARGIN = 20;
 const PDF_LINE_HEIGHT = 7;
 const PDF_BOTTOM_MARGIN = 15;
 
+/**
+ * Build an off-screen, text-only document for jsPDF's HTML renderer. The
+ * browser renderer uses the platform CJK font stack (Noto Sans TC on this
+ * machine, then Microsoft JhengHei/PingFang) and therefore avoids jsPDF's
+ * built-in Latin-font limitation for normal Web/Tauri usage.
+ */
+function createBrowserPdfArticle(): HTMLElement | null {
+  if (typeof document === 'undefined') return null;
+  const article = document.createElement('article');
+  Object.assign(article.style, {
+    position: 'fixed',
+    left: '-100000px',
+    top: '0',
+    width: '794px',
+    padding: '56px',
+    background: '#ffffff',
+    color: '#111827',
+    fontFamily: '"Noto Sans TC", "Microsoft JhengHei", "PingFang TC", sans-serif',
+    fontSize: '16px',
+    lineHeight: '1.8',
+    whiteSpace: 'normal',
+    zIndex: '-1',
+  });
+  article.setAttribute('aria-hidden', 'true');
+  document.body.appendChild(article);
+  return article;
+}
+
+function appendBrowserPdfText(parent: HTMLElement, text: string, tagName: 'h1' | 'h2' | 'p') {
+  const element = document.createElement(tagName);
+  element.textContent = text || '\u00a0';
+  element.style.whiteSpace = 'pre-wrap';
+  element.style.margin = tagName === 'p' ? '0 0 14px' : '0 0 18px';
+  if (tagName === 'h1') element.style.fontSize = '30px';
+  if (tagName === 'h2') element.style.fontSize = '22px';
+  parent.appendChild(element);
+}
+
+const BROWSER_PDF_SECTION_CHAR_LIMIT = 6000;
+
+function createBrowserPdfSections(
+  title: string,
+  titleTag: 'h1' | 'h2',
+  lines: string[],
+  leadingLines: string[] = [],
+): HTMLElement[] {
+  const sections: HTMLElement[] = [];
+  let section = createBrowserPdfArticle();
+  if (!section) return sections;
+
+  appendBrowserPdfText(section, title, titleTag);
+  let sectionCharacters = title.length;
+  for (const leadingLine of leadingLines) {
+    appendBrowserPdfText(section, leadingLine, 'p');
+    sectionCharacters += leadingLine.length + 1;
+  }
+
+  for (const line of lines) {
+    const nextCharacters = sectionCharacters + line.length + 1;
+    if (sectionCharacters > title.length && nextCharacters > BROWSER_PDF_SECTION_CHAR_LIMIT) {
+      sections.push(section);
+      section = createBrowserPdfArticle();
+      if (!section) return sections;
+      sectionCharacters = 0;
+    }
+    appendBrowserPdfText(section, line, 'p');
+    sectionCharacters += line.length + 1;
+  }
+
+  sections.push(section);
+  return sections;
+}
+
+async function renderBrowserPdfSections(sections: HTMLElement[]): Promise<Blob> {
+  if (typeof document !== 'undefined' && document.fonts?.ready) {
+    await document.fonts.ready;
+  }
+
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' });
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const margin = 36;
+  const contentWidth = pageWidth - margin * 2;
+  const contentHeight = pageHeight - margin * 2;
+  let renderedPageCount = 0;
+
+  for (const section of sections) {
+    const canvas = await html2canvas(section, {
+      scale: 1.5,
+      useCORS: true,
+      backgroundColor: '#ffffff',
+      logging: false,
+      windowWidth: 794,
+    });
+    const sliceHeight = Math.max(1, Math.floor((contentHeight / contentWidth) * canvas.width));
+    let sourceY = 0;
+    let sectionPage = 0;
+
+    while (sourceY < canvas.height) {
+      if (renderedPageCount > 0) doc.addPage();
+      const currentSliceHeight = Math.min(sliceHeight, canvas.height - sourceY);
+      const slice = document.createElement('canvas');
+      slice.width = canvas.width;
+      slice.height = currentSliceHeight;
+      const context = slice.getContext('2d');
+      if (!context) throw new Error('無法建立 PDF canvas context');
+      context.fillStyle = '#ffffff';
+      context.fillRect(0, 0, slice.width, slice.height);
+      context.drawImage(
+        canvas,
+        0,
+        sourceY,
+        canvas.width,
+        currentSliceHeight,
+        0,
+        0,
+        slice.width,
+        slice.height,
+      );
+      const renderedHeight = (currentSliceHeight / canvas.width) * contentWidth;
+      doc.addImage(
+        slice.toDataURL('image/png'),
+        'PNG',
+        margin,
+        margin,
+        contentWidth,
+        renderedHeight,
+      );
+      sourceY += currentSliceHeight;
+      renderedPageCount += 1;
+      sectionPage += 1;
+    }
+
+    if (sectionPage === 0) {
+      throw new Error('PDF section 沒有可渲染內容');
+    }
+  }
+
+  return doc.output('blob');
+}
+
+/** Browser/Tauri PDF path that preserves CJK glyphs through the platform font renderer. */
+export async function exportToPdfBrowser(
+  chapterTitle: string,
+  chapterContent: string,
+  bookTitle: string,
+): Promise<Blob> {
+  const sections = createBrowserPdfSections(chapterTitle, 'h1', chapterContent.split(/\r?\n/), [
+    `— ${bookTitle}`,
+  ]);
+  if (sections.length === 0) {
+    return exportToPdf(chapterTitle, chapterContent, bookTitle);
+  }
+
+  try {
+    return await renderBrowserPdfSections(sections);
+  } catch (error) {
+    console.error('Browser CJK PDF renderer unavailable.', error);
+    throw new Error('瀏覽器繁中 PDF 渲染失敗，未產生不完整的 fallback 檔案。');
+  } finally {
+    for (const section of sections) section.remove();
+  }
+}
+
 /** Write body text with word-wrap and automatic pagination. Returns final y position. */
-function writePdfBody(
-  doc: jsPDF,
-  text: string,
-  startY: number,
-  fontSize = 12
-): number {
+function writePdfBody(doc: jsPDF, text: string, startY: number, fontSize = 12): number {
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
   const maxWidth = pageWidth - PDF_MARGIN * 2;
@@ -207,7 +368,7 @@ function addPageNumbers(doc: jsPDF): void {
 export async function exportToWord(
   chapterTitle: string,
   chapterContent: string,
-  bookTitle: string
+  bookTitle: string,
 ): Promise<Blob> {
   const bodyParagraphs = chapterContent.split('\n').map(
     (line) =>
@@ -220,7 +381,7 @@ export async function exportToWord(
             size: 24, // 12pt in half-points
           }),
         ],
-      })
+      }),
   );
 
   const doc = new Document({
@@ -272,11 +433,7 @@ export async function exportToWord(
  * @param bookTitle - Parent book title shown as subtitle
  * @returns A .pdf Blob
  */
-export function exportToPdf(
-  chapterTitle: string,
-  chapterContent: string,
-  bookTitle: string
-): Blob {
+export function exportToPdf(chapterTitle: string, chapterContent: string, bookTitle: string): Blob {
   const doc = createPdfDoc();
   const needsCJKWarning =
     !hasCJKFont() &&
@@ -380,7 +537,7 @@ export async function exportFullBookToWord(book: Book): Promise<Blob> {
             color: '666666',
           }),
         ],
-      })
+      }),
     );
   }
 
@@ -412,7 +569,7 @@ export async function exportFullBookToWord(book: Book): Promise<Blob> {
       children.push(
         new Paragraph({
           children: [new PageBreak()],
-        })
+        }),
       );
     }
 
@@ -429,7 +586,7 @@ export async function exportFullBookToWord(book: Book): Promise<Blob> {
             font: 'Noto Sans TC',
           }),
         ],
-      })
+      }),
     );
 
     // Section label + status
@@ -445,7 +602,7 @@ export async function exportFullBookToWord(book: Book): Promise<Blob> {
             color: '888888',
           }),
         ],
-      })
+      }),
     );
 
     // Body paragraphs
@@ -460,7 +617,7 @@ export async function exportFullBookToWord(book: Book): Promise<Blob> {
               size: 24,
             }),
           ],
-        })
+        }),
     );
     children.push(...bodyParagraphs);
 
@@ -504,7 +661,11 @@ export function exportFullBookToPdf(book: Book): Blob {
   const pageHeight = doc.internal.pageSize.getHeight();
   const today = new Date().toISOString().slice(0, 10);
 
-  const allText = [book.title, book.genre ?? '', ...book.chapters.map((c) => c.title + c.content)].join('');
+  const allText = [
+    book.title,
+    book.genre ?? '',
+    ...book.chapters.map((c) => c.title + c.content),
+  ].join('');
   const needsCJKWarning = !hasCJKFont() && containsCJK(allText);
 
   // --- Title page ---
@@ -542,7 +703,7 @@ export function exportFullBookToPdf(book: Book): Blob {
     doc.text(
       `${chapter.section} \u00B7 ${chapter.status} \u00B7 ${chapter.wordCount} \u5B57`,
       PDF_MARGIN,
-      y
+      y,
     );
     doc.setTextColor(0, 0, 0);
     y += 10;
@@ -563,6 +724,37 @@ export function exportFullBookToPdf(book: Book): Blob {
   return doc.output('blob');
 }
 
+/** Browser/Tauri full-book PDF path using the platform CJK font renderer. */
+export async function exportFullBookToPdfBrowser(book: Book): Promise<Blob> {
+  const sections: HTMLElement[] = [];
+  const firstSection = createBrowserPdfArticle();
+  if (!firstSection) {
+    return exportFullBookToPdf(book);
+  }
+  sections.push(firstSection);
+
+  try {
+    appendBrowserPdfText(firstSection, book.title, 'h1');
+    if (book.genre) appendBrowserPdfText(firstSection, book.genre, 'p');
+    if (book.description) appendBrowserPdfText(firstSection, book.description, 'p');
+
+    for (const chapter of book.chapters) {
+      sections.push(
+        ...createBrowserPdfSections(chapter.title, 'h2', chapter.content.split(/\r?\n/), [
+          `${chapter.section} · ${chapter.status} · ${chapter.wordCount} 字`,
+        ]),
+      );
+    }
+
+    return await renderBrowserPdfSections(sections);
+  } catch (error) {
+    console.error('Browser CJK full-book PDF renderer unavailable.', error);
+    throw new Error('整本書繁中 PDF 渲染失敗，未產生不完整的 fallback 檔案。');
+  } finally {
+    for (const section of sections) section.remove();
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Markdown Export
 // ---------------------------------------------------------------------------
@@ -581,7 +773,9 @@ export function exportChapterToMarkdown(chapter: Chapter, bookTitle: string): st
   lines.push('');
   lines.push(`## ${chapter.title}`);
   lines.push('');
-  lines.push(`<!-- status: ${chapter.status} | words: ${chapter.wordCount} | section: ${chapter.section} -->`);
+  lines.push(
+    `<!-- status: ${chapter.status} | words: ${chapter.wordCount} | section: ${chapter.section} -->`,
+  );
   lines.push('');
 
   if (chapter.content) {
@@ -644,7 +838,7 @@ export function exportToMarkdown(book: Book): string {
     lines.push(`## ${chapter.title}`);
     lines.push('');
     lines.push(
-      `<!-- status: ${chapter.status} | words: ${chapter.wordCount} | section: ${chapter.section} | lastSaved: ${chapter.lastSaved} -->`
+      `<!-- status: ${chapter.status} | words: ${chapter.wordCount} | section: ${chapter.section} | lastSaved: ${chapter.lastSaved} -->`,
     );
     lines.push('');
 
@@ -701,7 +895,7 @@ export function exportToMarkdown(book: Book): string {
         const targetNode = book.knowledgeGraph.nodes.find((n) => n.id === edge.target);
         const label = edge.label ? ` [${edge.label}]` : '';
         lines.push(
-          `- ${sourceNode?.label ?? edge.source} \u2192 ${targetNode?.label ?? edge.target}${label}`
+          `- ${sourceNode?.label ?? edge.source} \u2192 ${targetNode?.label ?? edge.target}${label}`,
         );
       }
       lines.push('');

@@ -1,6 +1,6 @@
-import React from 'react';
+import type React from 'react';
+import type { KnowledgeEdge, KnowledgeNode } from '../../types';
 import KnowledgeGraph from '../KnowledgeGraph';
-import type { KnowledgeNode, KnowledgeEdge } from '../../types';
 
 interface GraphModalProps {
   isOpen: boolean;
@@ -25,18 +25,29 @@ const GraphModal: React.FC<GraphModalProps> = ({
 
   return (
     <div
+      role="presentation"
       className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-6"
       onClick={onClose}
+      onKeyDown={(event) => {
+        if (event.key === 'Escape') onClose();
+      }}
     >
       <div
         className="bg-white w-full max-w-4xl rounded-3xl shadow-2xl overflow-hidden"
         onClick={(e) => e.stopPropagation()}
+        onKeyDown={(e) => e.stopPropagation()}
       >
         <div className="px-6 py-4 border-b flex justify-between items-center bg-slate-50">
           <div className="font-semibold flex items-center gap-x-2 text-lg">
             📊 知識關聯圖（完整互動版）
           </div>
-          <button onClick={onClose} className="text-3xl leading-none text-slate-400 hover:text-slate-600">×</button>
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-3xl leading-none text-slate-400 hover:text-slate-600"
+          >
+            ×
+          </button>
         </div>
 
         <div className="p-6">
@@ -59,8 +70,11 @@ const GraphModal: React.FC<GraphModalProps> = ({
         </div>
 
         <div className="bg-slate-50 px-6 py-3 text-xs flex justify-end gap-x-3 border-t">
-          <button onClick={onClose} className="px-5 py-2 text-slate-600">關閉</button>
+          <button type="button" onClick={onClose} className="px-5 py-2 text-slate-600">
+            關閉
+          </button>
           <button
+            type="button"
             onClick={() => {
               onResetLayout();
               onClose();

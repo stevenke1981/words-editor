@@ -1,78 +1,100 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { DEFAULT_TEMPLATE_ID, createBookFromTemplate } from '../data/templates';
+import {
+  BOOK_STORAGE_KEY,
+  LEGACY_STORAGE_KEY,
+  type LoadedBook,
+  decodeStoredBook,
+  encodeStoredBook,
+  parseBookJson,
+} from '../services/bookStorage';
 import type { Book, Chapter, GoldenQuote, KnowledgeNode } from '../types';
-import { createBookFromTemplate, DEFAULT_TEMPLATE_ID } from '../data/templates';
 
-const STORAGE_KEY = 'wordsEditor:project';
-const STORAGE_VERSION = 2;
-const LEGACY_STORAGE_KEY = 'wordsEditorProject';
+export type StorageStatus = 'saved' | 'saving' | 'error';
 
-interface StorageEnvelope {
-  version: number;
-  savedAt: string;
-  data: Book;
-}
-
-function loadBook(): Book {
-  // Try new versioned envelope format first
+function loadBook(): LoadedBook {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(BOOK_STORAGE_KEY);
     if (raw) {
-      const envelope = JSON.parse(raw) as StorageEnvelope;
-      if (envelope.version === STORAGE_VERSION && envelope.data?.chapters?.length > 0) {
-        return envelope.data;
-      }
-      // Migration from v1: raw Book JSON stored without envelope under new key
-      if (!envelope.version && (envelope as unknown as Book).chapters) {
-        const legacy = envelope as unknown as Book;
-        if (legacy.chapters?.length > 0) return legacy;
-      }
+      const loaded = decodeStoredBook(raw);
+      if (loaded) return loaded;
     }
   } catch {
-    // ignore corrupt storage
+    // Fall through to the legacy key or template.
   }
 
-  // Try legacy key for migration
   try {
     const legacy = localStorage.getItem(LEGACY_STORAGE_KEY);
     if (legacy) {
-      const parsed = JSON.parse(legacy) as Book;
-      if (parsed?.title && Array.isArray(parsed.chapters) && parsed.chapters.length > 0) {
-        return parsed;
-      }
+      const loaded = decodeStoredBook(legacy);
+      if (loaded) return loaded;
     }
   } catch {
-    // ignore
+    // Fall through to the default template.
   }
 
-  return createBookFromTemplate(DEFAULT_TEMPLATE_ID);
+  const book = createBookFromTemplate(DEFAULT_TEMPLATE_ID);
+  return { book, currentChapterId: book.chapters[0]?.id || '01' };
 }
 
 export function useBook() {
-  const [book, setBook] = useState<Book>(loadBook);
-  const [currentChapterId, setCurrentChapterId] = useState<string>(
-    () => loadBook().chapters[0]?.id || '01'
-  );
+  const [initial] = useState<LoadedBook>(loadBook);
+  const [book, setBook] = useState<Book>(initial.book);
+  const [currentChapterId, setCurrentChapterId] = useState<string>(initial.currentChapterId);
+  const latestBookRef = useRef(book);
+  const latestChapterIdRef = useRef(currentChapterId);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [storageStatus, setStorageStatus] = useState<StorageStatus>('saved');
+
+  const persist = useCallback((): boolean => {
+    try {
+      localStorage.setItem(
+        BOOK_STORAGE_KEY,
+        encodeStoredBook(latestBookRef.current, latestChapterIdRef.current),
+      );
+      setStorageStatus('saved');
+      return true;
+    } catch {
+      setStorageStatus('error');
+      return false;
+    }
+  }, []);
+
+  const flushSave = useCallback(() => {
+    if (saveTimer.current) {
+      clearTimeout(saveTimer.current);
+      saveTimer.current = null;
+    }
+    persist();
+  }, [persist]);
 
   // Debounced persistence (500ms)
   useEffect(() => {
+    latestBookRef.current = book;
+    latestChapterIdRef.current = currentChapterId;
     if (saveTimer.current) clearTimeout(saveTimer.current);
+    setStorageStatus('saving');
     saveTimer.current = setTimeout(() => {
-      try {
-        const envelope: StorageEnvelope = {
-          version: STORAGE_VERSION,
-          savedAt: new Date().toISOString(),
-          data: book,
-        };
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(envelope));
-      } catch {
-        // quota / private mode
-      }
+      saveTimer.current = null;
+      persist();
     }, 500);
     return () => {
       if (saveTimer.current) clearTimeout(saveTimer.current);
     };
-  }, [book]);
+  }, [book, currentChapterId, persist]);
+
+  // Flush pending edits before the document is backgrounded or closed.
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') flushSave();
+    };
+    window.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('beforeunload', flushSave);
+    return () => {
+      window.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('beforeunload', flushSave);
+    };
+  }, [flushSave]);
 
   // Chapter operations
   const updateChapter = useCallback((chapterId: string, updates: Partial<Chapter>) => {
@@ -84,7 +106,7 @@ export function useBook() {
               ...updates,
               lastSaved: new Date().toISOString().slice(0, 16).replace('T', ' '),
             }
-          : ch
+          : ch,
       );
       return { ...prev, chapters: newChapters };
     });
@@ -97,7 +119,7 @@ export function useBook() {
   // Quote operations
   const addQuote = useCallback((text: string, chapterId?: string) => {
     const newQuote: GoldenQuote = {
-      id: 'q' + Date.now().toString(36),
+      id: `q${Date.now().toString(36)}`,
       text: text.trim(),
       chapterId,
       createdAt: new Date().toISOString().slice(0, 10),
@@ -128,7 +150,7 @@ export function useBook() {
 
   const addGraphNode = useCallback((label: string) => {
     const newNode: KnowledgeNode = {
-      id: 'k' + Date.now().toString(36),
+      id: `k${Date.now().toString(36)}`,
       label: label.trim(),
       type: 'concept',
       x: 90 + Math.random() * 80,
@@ -158,40 +180,20 @@ export function useBook() {
 
   // Import JSON
   const importBook = useCallback((json: string): boolean => {
-    try {
-      const parsed = JSON.parse(json);
-      if (!parsed || !Array.isArray(parsed.chapters) || parsed.chapters.length === 0) {
-        return false;
-      }
-      // Validate minimal structure
-      const hasTitle = typeof parsed.title === 'string';
-      const hasGraph = parsed.knowledgeGraph && Array.isArray(parsed.knowledgeGraph.nodes);
-      if (!hasTitle || !hasGraph) {
-        return false;
-      }
-      const imported: Book = {
-        title: parsed.title,
-        templateId: parsed.templateId,
-        genre: parsed.genre,
-        description: parsed.description,
-        chapters: parsed.chapters,
-        knowledgeGraph: parsed.knowledgeGraph,
-        goldenQuotes: Array.isArray(parsed.goldenQuotes) ? parsed.goldenQuotes : [],
-      };
-      setBook(imported);
-      setCurrentChapterId(imported.chapters[0]?.id || '01');
-      return true;
-    } catch {
-      return false;
-    }
+    const loaded = parseBookJson(json);
+    if (!loaded) return false;
+    setBook(loaded.book);
+    setCurrentChapterId(loaded.currentChapterId);
+    return true;
   }, []);
 
-  const currentChapter =
-    book.chapters.find((c) => c.id === currentChapterId) || book.chapters[0];
+  const currentChapter = book.chapters.find((c) => c.id === currentChapterId) || book.chapters[0];
 
   return {
     book,
     setBook,
+    storageStatus,
+    flushSave,
     currentChapter,
     currentChapterId,
     setCurrentChapterId,

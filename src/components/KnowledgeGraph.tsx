@@ -1,5 +1,6 @@
-import React, { useState, useRef, useCallback, useMemo, useEffect } from 'react';
-import type { KnowledgeNode, KnowledgeEdge } from '../types';
+import type React from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { KnowledgeEdge, KnowledgeNode } from '../types';
 
 interface KnowledgeGraphProps {
   nodes: KnowledgeNode[];
@@ -37,7 +38,17 @@ const KnowledgeGraph: React.FC<KnowledgeGraphProps> = ({
 
   const svgRef = useRef<SVGSVGElement>(null);
   const lastMouse = useRef({ x: 0, y: 0 });
-  const dragInfoRef = useRef<{ nodeId: string | null; offsetX: number; offsetY: number }>({ nodeId: null, offsetX: 0, offsetY: 0 });
+  const dragInfoRef = useRef<{
+    nodeId: string | null;
+    offsetX: number;
+    offsetY: number;
+    moved: boolean;
+  }>({
+    nodeId: null,
+    offsetX: 0,
+    offsetY: 0,
+    moved: false,
+  });
 
   // Sync external nodes if they change (e.g. reset)
   useEffect(() => {
@@ -45,21 +56,22 @@ const KnowledgeGraph: React.FC<KnowledgeGraphProps> = ({
   }, [initialNodes]);
 
   // Notify parent of position changes (immutable)
-  const updateNodes = useCallback((newNodes: KnowledgeNode[]) => {
-    setNodes(newNodes);
-    onNodesChange?.(newNodes);
-  }, [onNodesChange]);
+  const updateNodes = useCallback(
+    (newNodes: KnowledgeNode[]) => {
+      setNodes(newNodes);
+      onNodesChange?.(newNodes);
+    },
+    [onNodesChange],
+  );
 
   // Get node by id
-  const getNode = useCallback((id: string) => nodes.find(n => n.id === id), [nodes]);
+  const getNode = useCallback((id: string) => nodes.find((n) => n.id === id), [nodes]);
 
   // Highlighted edges when a node is selected
   const highlightedEdgeIds = useMemo(() => {
     if (!selectedId) return new Set<string>();
     return new Set(
-      edges
-        .filter(e => e.source === selectedId || e.target === selectedId)
-        .map(e => e.id)
+      edges.filter((e) => e.source === selectedId || e.target === selectedId).map((e) => e.id),
     );
   }, [selectedId, edges]);
 
@@ -92,110 +104,140 @@ const KnowledgeGraph: React.FC<KnowledgeGraphProps> = ({
   }, []);
 
   // Zoom handler (wheel)
-  const handleWheel = useCallback((e: React.WheelEvent<SVGSVGElement>) => {
-    if (!interactive) return;
-    e.preventDefault();
+  const handleWheel = useCallback(
+    (e: React.WheelEvent<SVGSVGElement>) => {
+      if (!interactive) return;
+      e.preventDefault();
 
-    const rect = svgRef.current?.getBoundingClientRect();
-    if (!rect) return;
+      const rect = svgRef.current?.getBoundingClientRect();
+      if (!rect) return;
 
-    const mouseSvg = screenToSvg(e.clientX, e.clientY);
-    const factor = e.deltaY < 0 ? 1.1 : 0.9;
-    const newScale = transform.scale * factor;
+      const mouseSvg = screenToSvg(e.clientX, e.clientY);
+      const factor = e.deltaY < 0 ? 1.1 : 0.9;
+      const newScale = transform.scale * factor;
 
-    // Zoom towards mouse position
-    const newX = mouseSvg.x - (mouseSvg.x - transform.x) * (newScale / transform.scale);
-    const newY = mouseSvg.y - (mouseSvg.y - transform.y) * (newScale / transform.scale);
+      // Zoom towards mouse position
+      const newX = mouseSvg.x - (mouseSvg.x - transform.x) * (newScale / transform.scale);
+      const newY = mouseSvg.y - (mouseSvg.y - transform.y) * (newScale / transform.scale);
 
-    setTransform(clampTransform({ x: newX, y: newY, scale: newScale }));
-  }, [transform, interactive, screenToSvg, clampTransform]);
+      setTransform(clampTransform({ x: newX, y: newY, scale: newScale }));
+    },
+    [transform, interactive, screenToSvg, clampTransform],
+  );
 
   // Start pan or node drag
-  const handleMouseDown = useCallback((e: React.MouseEvent<SVGSVGElement>) => {
-    if (!interactive) return;
+  const handleMouseDown = useCallback(
+    (e: React.MouseEvent<SVGSVGElement>) => {
+      if (!interactive) return;
 
-    const svg = svgRef.current;
-    if (!svg) return;
+      const svg = svgRef.current;
+      if (!svg) return;
 
-    const target = e.target as SVGElement;
-    const nodeGroup = target.closest('[data-node-id]') as SVGElement | null;
-    const nodeId = nodeGroup?.getAttribute('data-node-id');
+      const target = e.target as SVGElement;
+      const nodeGroup = target.closest('[data-node-id]') as SVGElement | null;
+      const nodeId = nodeGroup?.getAttribute('data-node-id');
 
-    const mouseSvg = screenToSvg(e.clientX, e.clientY);
+      const mouseSvg = screenToSvg(e.clientX, e.clientY);
 
-    if (nodeId) {
-      // Start dragging a node
-      const node = getNode(nodeId);
-      if (node) {
-        setDragNodeId(nodeId);
-        dragInfoRef.current = {
-          nodeId,
-          offsetX: mouseSvg.x - node.x,
-          offsetY: mouseSvg.y - node.y,
-        };
-        setSelectedId(nodeId);
-        onNodeClick?.(node);
+      if (nodeId) {
+        // Start dragging a node
+        const node = getNode(nodeId);
+        if (node) {
+          setDragNodeId(nodeId);
+          dragInfoRef.current = {
+            nodeId,
+            offsetX: mouseSvg.x - node.x,
+            offsetY: mouseSvg.y - node.y,
+            moved: false,
+          };
+          setSelectedId(nodeId);
+        }
+      } else {
+        // Start panning the view
+        setIsPanning(true);
+        lastMouse.current = { x: e.clientX, y: e.clientY };
       }
-    } else {
-      // Start panning the view
-      setIsPanning(true);
-      lastMouse.current = { x: e.clientX, y: e.clientY };
-    }
-  }, [interactive, screenToSvg, getNode, onNodeClick]);
+    },
+    [interactive, screenToSvg, getNode],
+  );
 
   // Drag / pan move
-  const handleMouseMove = useCallback((e: React.MouseEvent<SVGSVGElement>) => {
-    if (!interactive) return;
+  const handleMouseMove = useCallback(
+    (e: React.MouseEvent<SVGSVGElement>) => {
+      if (!interactive) return;
 
-    if (dragNodeId && dragInfoRef.current.nodeId) {
-      const mouseSvg = screenToSvg(e.clientX, e.clientY);
-      const { offsetX, offsetY } = dragInfoRef.current;
-      const newX = mouseSvg.x - offsetX;
-      const newY = mouseSvg.y - offsetY;
+      if (dragNodeId && dragInfoRef.current.nodeId) {
+        const mouseSvg = screenToSvg(e.clientX, e.clientY);
+        const { offsetX, offsetY } = dragInfoRef.current;
+        dragInfoRef.current.moved = true;
+        const newX = mouseSvg.x - offsetX;
+        const newY = mouseSvg.y - offsetY;
 
-      const newNodes = nodes.map(n =>
-        n.id === dragNodeId ? { ...n, x: newX, y: newY } : n
-      );
-      updateNodes(newNodes);
-    } else if (isPanning) {
-      const dx = (e.clientX - lastMouse.current.x) / transform.scale;
-      const dy = (e.clientY - lastMouse.current.y) / transform.scale;
+        const newNodes = nodes.map((n) => (n.id === dragNodeId ? { ...n, x: newX, y: newY } : n));
+        updateNodes(newNodes);
+      } else if (isPanning) {
+        const dx = (e.clientX - lastMouse.current.x) / transform.scale;
+        const dy = (e.clientY - lastMouse.current.y) / transform.scale;
 
-      setTransform(prev =>
-        clampTransform({
-          ...prev,
-          x: prev.x + dx,
-          y: prev.y + dy,
-        })
-      );
-      lastMouse.current = { x: e.clientX, y: e.clientY };
-    }
-  }, [interactive, dragNodeId, nodes, updateNodes, isPanning, transform.scale, clampTransform, screenToSvg]);
+        setTransform((prev) =>
+          clampTransform({
+            ...prev,
+            x: prev.x + dx,
+            y: prev.y + dy,
+          }),
+        );
+        lastMouse.current = { x: e.clientX, y: e.clientY };
+      }
+    },
+    [
+      interactive,
+      dragNodeId,
+      nodes,
+      updateNodes,
+      isPanning,
+      transform.scale,
+      clampTransform,
+      screenToSvg,
+    ],
+  );
 
   // End drag/pan
   const handleMouseUp = useCallback(() => {
     setIsPanning(false);
     setDragNodeId(null);
-    dragInfoRef.current = { nodeId: null, offsetX: 0, offsetY: 0 };
+    if (dragInfoRef.current.nodeId) {
+      setTimeout(() => {
+        dragInfoRef.current = { nodeId: null, offsetX: 0, offsetY: 0, moved: false };
+      }, 0);
+    } else {
+      dragInfoRef.current = { nodeId: null, offsetX: 0, offsetY: 0, moved: false };
+    }
   }, []);
 
   // Click on background clears selection (if not dragging)
-  const handleClick = useCallback((e: React.MouseEvent<SVGSVGElement>) => {
-    const target = e.target as SVGElement;
-    const nodeGroup = target.closest('[data-node-id]');
-    if (!nodeGroup && selectedId) {
-      setSelectedId(null);
-    }
-  }, [selectedId]);
+  const handleClick = useCallback(
+    (e: React.MouseEvent<SVGSVGElement>) => {
+      const target = e.target as SVGElement;
+      const nodeGroup = target.closest('[data-node-id]');
+      if (!nodeGroup && selectedId) {
+        setSelectedId(null);
+      }
+    },
+    [selectedId],
+  );
 
   // Node click (for selection + callback, separate from drag)
-  const handleNodeClick = useCallback((node: KnowledgeNode, e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (dragNodeId) return; // was a drag, not pure click
+  const handleNodeClick = useCallback(
+    (node: KnowledgeNode, e: React.MouseEvent) => {
+      e.stopPropagation();
+      if (dragInfoRef.current.nodeId === node.id && dragInfoRef.current.moved) return;
 
-    setSelectedId(node.id === selectedId ? null : node.id);
-    onNodeClick?.(node);
-  }, [selectedId, onNodeClick, dragNodeId]);
+      setSelectedId(node.id === selectedId ? null : node.id);
+      onNodeClick?.(node);
+      dragInfoRef.current = { nodeId: null, offsetX: 0, offsetY: 0, moved: false };
+    },
+    [selectedId, onNodeClick],
+  );
 
   // Control buttons
   const resetView = useCallback(() => {
@@ -204,22 +246,22 @@ const KnowledgeGraph: React.FC<KnowledgeGraphProps> = ({
   }, []);
 
   const zoomIn = useCallback(() => {
-    setTransform(prev => clampTransform({ ...prev, scale: prev.scale * 1.2 }));
+    setTransform((prev) => clampTransform({ ...prev, scale: prev.scale * 1.2 }));
   }, [clampTransform]);
 
   const zoomOut = useCallback(() => {
-    setTransform(prev => clampTransform({ ...prev, scale: prev.scale / 1.2 }));
+    setTransform((prev) => clampTransform({ ...prev, scale: prev.scale / 1.2 }));
   }, [clampTransform]);
 
   // Compute node visual size based on label
-  const getNodeSize = (label: string) => {
+  const getNodeSize = useCallback((label: string) => {
     const textWidth = Math.max(52, label.length * 6.2 + 18);
     return { w: textWidth, h: 18 };
-  };
+  }, []);
 
   // Render edges first (under nodes)
   const renderedEdges = useMemo(() => {
-    return edges.map(edge => {
+    return edges.map((edge) => {
       const source = getNode(edge.source);
       const target = getNode(edge.target);
       if (!source || !target) return null;
@@ -242,7 +284,7 @@ const KnowledgeGraph: React.FC<KnowledgeGraphProps> = ({
 
   // Render nodes
   const renderedNodes = useMemo(() => {
-    return nodes.map(node => {
+    return nodes.map((node) => {
       const isSelected = node.id === selectedId;
       const size = getNodeSize(node.label);
       const color = node.color || (node.type === 'concept' ? '#2563eb' : '#64748b');
@@ -252,7 +294,15 @@ const KnowledgeGraph: React.FC<KnowledgeGraphProps> = ({
           key={node.id}
           data-node-id={node.id}
           className={`node ${isSelected ? 'selected' : ''}`}
+          tabIndex={0}
           onClick={(e) => handleNodeClick(node, e)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              setSelectedId(node.id);
+              onNodeClick?.(node);
+            }
+          }}
           onMouseDown={(_e) => {
             // handled in svg mousedown for consistency
           }}
@@ -294,7 +344,7 @@ const KnowledgeGraph: React.FC<KnowledgeGraphProps> = ({
         </g>
       );
     });
-  }, [nodes, selectedId, handleNodeClick]);
+  }, [nodes, selectedId, handleNodeClick, getNodeSize, onNodeClick]);
 
   const graphContentTransform = `translate(${transform.x} ${transform.y}) scale(${transform.scale})`;
 
@@ -302,6 +352,8 @@ const KnowledgeGraph: React.FC<KnowledgeGraphProps> = ({
     <div className={`graph-container relative select-none ${className}`} style={{ width, height }}>
       <svg
         ref={svgRef}
+        role="img"
+        aria-label="知識關聯圖"
         width={width}
         height={height}
         className="graph-svg"
@@ -311,6 +363,9 @@ const KnowledgeGraph: React.FC<KnowledgeGraphProps> = ({
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
         onClick={handleClick}
+        onKeyDown={(event) => {
+          if (event.key === 'Escape') setSelectedId(null);
+        }}
         style={{ touchAction: 'none' }}
       >
         {/* Subtle grid background */}
@@ -335,6 +390,7 @@ const KnowledgeGraph: React.FC<KnowledgeGraphProps> = ({
       {interactive && (
         <div className="absolute bottom-1 right-1 flex gap-0.5 bg-white/90 backdrop-blur rounded-md shadow-sm border border-slate-200 p-0.5">
           <button
+            type="button"
             onClick={zoomOut}
             className="w-5 h-5 flex items-center justify-center text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded text-[10px] leading-none"
             title="縮小"
@@ -342,6 +398,7 @@ const KnowledgeGraph: React.FC<KnowledgeGraphProps> = ({
             −
           </button>
           <button
+            type="button"
             onClick={resetView}
             className="w-5 h-5 flex items-center justify-center text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded text-[9px]"
             title="重置視圖"
@@ -349,6 +406,7 @@ const KnowledgeGraph: React.FC<KnowledgeGraphProps> = ({
             ⟲
           </button>
           <button
+            type="button"
             onClick={zoomIn}
             className="w-5 h-5 flex items-center justify-center text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded text-[10px] leading-none"
             title="放大"

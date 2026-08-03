@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import type { Provider } from '../../services/agentService';
+import type React from 'react';
+import { useEffect, useState } from 'react';
 import type { ApiSettings } from '../../hooks/useAgentPipeline';
+import type { Provider } from '../../services/agentService';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -13,7 +14,7 @@ interface SettingsModalProps {
 
 function maskKey(key: string): string {
   if (!key || key.length < 8) return '***';
-  return key.slice(0, 5) + '...' + key.slice(-3);
+  return `${key.slice(0, 5)}...${key.slice(-3)}`;
 }
 
 const SettingsModal: React.FC<SettingsModalProps> = ({
@@ -43,25 +44,40 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
 
   return (
     <div
+      role="presentation"
       className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[110] flex items-center justify-center p-6"
       onClick={onClose}
+      onKeyDown={(event) => {
+        if (event.key === 'Escape') onClose();
+      }}
     >
       <div
         className="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
+        onKeyDown={(e) => e.stopPropagation()}
       >
         <div className="px-6 py-4 border-b flex justify-between items-center bg-slate-50 shrink-0">
-          <div className="font-semibold flex items-center gap-x-2 text-lg">
-            ⚙ API 設定
-          </div>
-          <button onClick={onClose} className="text-3xl leading-none text-slate-400 hover:text-slate-600">×</button>
+          <div className="font-semibold flex items-center gap-x-2 text-lg">⚙ API 設定</div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-3xl leading-none text-slate-400 hover:text-slate-600"
+          >
+            ×
+          </button>
         </div>
 
         <div className="p-6 space-y-5 text-sm overflow-y-auto">
           {/* Provider */}
           <div>
-            <label className="block text-xs text-slate-500 mb-1.5 font-medium">提供者（Provider）</label>
+            <label
+              htmlFor="settings-provider"
+              className="block text-xs text-slate-500 mb-1.5 font-medium"
+            >
+              提供者（Provider）
+            </label>
             <select
+              id="settings-provider"
               value={draft.provider}
               onChange={(e) => setDraft({ ...draft, provider: e.target.value as Provider })}
               className="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-400 bg-white"
@@ -86,8 +102,14 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
 
           {/* DeepSeek Key */}
           <div>
-            <label className="block text-xs text-slate-500 mb-1.5 font-medium">DeepSeek API Key</label>
+            <label
+              htmlFor="settings-deepseek-key"
+              className="block text-xs text-slate-500 mb-1.5 font-medium"
+            >
+              DeepSeek API Key
+            </label>
             <input
+              id="settings-deepseek-key"
               type="password"
               value={draft.deepseekKey}
               onChange={(e) => setDraft({ ...draft, deepseekKey: e.target.value })}
@@ -95,15 +117,25 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
               className="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm font-mono focus:outline-none focus:border-blue-400"
             />
             {draft.deepseekKey && (
-              <div className="mt-1 text-[10px] text-emerald-600">已設定：{maskKey(draft.deepseekKey)}</div>
+              <div className="mt-1 text-[10px] text-emerald-600">
+                已設定：{maskKey(draft.deepseekKey)}
+              </div>
             )}
-            <div className="text-[10px] text-slate-400 mt-0.5">從 https://platform.deepseek.com/ 取得</div>
+            <div className="text-[10px] text-slate-400 mt-0.5">
+              從 https://platform.deepseek.com/ 取得
+            </div>
           </div>
 
           {/* OpenRouter Key */}
           <div>
-            <label className="block text-xs text-slate-500 mb-1.5 font-medium">OpenRouter API Key</label>
+            <label
+              htmlFor="settings-openrouter-key"
+              className="block text-xs text-slate-500 mb-1.5 font-medium"
+            >
+              OpenRouter API Key
+            </label>
             <input
+              id="settings-openrouter-key"
               type="password"
               value={draft.openrouterKey}
               onChange={(e) => setDraft({ ...draft, openrouterKey: e.target.value })}
@@ -111,15 +143,25 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
               className="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm font-mono focus:outline-none focus:border-blue-400"
             />
             {draft.openrouterKey && (
-              <div className="mt-1 text-[10px] text-emerald-600">已設定：{maskKey(draft.openrouterKey)}</div>
+              <div className="mt-1 text-[10px] text-emerald-600">
+                已設定：{maskKey(draft.openrouterKey)}
+              </div>
             )}
-            <div className="text-[10px] text-slate-400 mt-0.5">從 https://openrouter.ai/ 取得（支援多模型）</div>
+            <div className="text-[10px] text-slate-400 mt-0.5">
+              從 https://openrouter.ai/ 取得（支援多模型）
+            </div>
           </div>
 
           {/* Alibaba Qwen Key */}
           <div>
-            <label className="block text-xs text-slate-500 mb-1.5 font-medium">Alibaba Qwen（通義千問）API Key</label>
+            <label
+              htmlFor="settings-qwen-key"
+              className="block text-xs text-slate-500 mb-1.5 font-medium"
+            >
+              Alibaba Qwen（通義千問）API Key
+            </label>
             <input
+              id="settings-qwen-key"
               type="password"
               value={draft.qwenKey}
               onChange={(e) => setDraft({ ...draft, qwenKey: e.target.value })}
@@ -127,15 +169,25 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
               className="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm font-mono focus:outline-none focus:border-blue-400"
             />
             {draft.qwenKey && (
-              <div className="mt-1 text-[10px] text-emerald-600">已設定：{maskKey(draft.qwenKey)}</div>
+              <div className="mt-1 text-[10px] text-emerald-600">
+                已設定：{maskKey(draft.qwenKey)}
+              </div>
             )}
-            <div className="text-[10px] text-slate-400 mt-0.5">從 https://bailian.console.aliyun.com/ → API-KEY 管理取得（Token Plan 個人版適用）</div>
+            <div className="text-[10px] text-slate-400 mt-0.5">
+              從 https://bailian.console.aliyun.com/ → API-KEY 管理取得（Token Plan 個人版適用）
+            </div>
           </div>
 
           {/* Sakana AI Key */}
           <div>
-            <label className="block text-xs text-slate-500 mb-1.5 font-medium">Sakana AI API Key</label>
+            <label
+              htmlFor="settings-sakana-key"
+              className="block text-xs text-slate-500 mb-1.5 font-medium"
+            >
+              Sakana AI API Key
+            </label>
             <input
+              id="settings-sakana-key"
               type="password"
               value={draft.sakanaKey}
               onChange={(e) => setDraft({ ...draft, sakanaKey: e.target.value })}
@@ -143,15 +195,25 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
               className="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm font-mono focus:outline-none focus:border-blue-400"
             />
             {draft.sakanaKey && (
-              <div className="mt-1 text-[10px] text-emerald-600">已設定：{maskKey(draft.sakanaKey)}</div>
+              <div className="mt-1 text-[10px] text-emerald-600">
+                已設定：{maskKey(draft.sakanaKey)}
+              </div>
             )}
-            <div className="text-[10px] text-slate-400 mt-0.5">從 https://sakana.ai/ → API Console 取得</div>
+            <div className="text-[10px] text-slate-400 mt-0.5">
+              從 https://sakana.ai/ → API Console 取得
+            </div>
           </div>
 
           {/* Google Gemini Key */}
           <div>
-            <label className="block text-xs text-slate-500 mb-1.5 font-medium">Google Gemini API Key</label>
+            <label
+              htmlFor="settings-gemini-key"
+              className="block text-xs text-slate-500 mb-1.5 font-medium"
+            >
+              Google Gemini API Key
+            </label>
             <input
+              id="settings-gemini-key"
               type="password"
               value={draft.geminiKey}
               onChange={(e) => setDraft({ ...draft, geminiKey: e.target.value })}
@@ -159,31 +221,47 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
               className="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm font-mono focus:outline-none focus:border-blue-400"
             />
             {draft.geminiKey && (
-              <div className="mt-1 text-[10px] text-emerald-600">已設定：{maskKey(draft.geminiKey)}</div>
+              <div className="mt-1 text-[10px] text-emerald-600">
+                已設定：{maskKey(draft.geminiKey)}
+              </div>
             )}
-            <div className="text-[10px] text-slate-400 mt-0.5">從 https://aistudio.google.com/apikey 取得（免費額度）</div>
+            <div className="text-[10px] text-slate-400 mt-0.5">
+              從 https://aistudio.google.com/apikey 取得（免費額度）
+            </div>
           </div>
 
           {/* Optional Model */}
           <div>
-            <label className="block text-xs text-slate-500 mb-1.5 font-medium">模型名稱（選填，留空使用預設）</label>
+            <label
+              htmlFor="settings-model-name"
+              className="block text-xs text-slate-500 mb-1.5 font-medium"
+            >
+              模型名稱（選填，留空使用預設）
+            </label>
             <input
+              id="settings-model-name"
               type="text"
               value={draft.modelName}
               onChange={(e) => setDraft({ ...draft, modelName: e.target.value })}
               placeholder="例如：deepseek-chat 或 deepseek/deepseek-chat"
               className="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm font-mono focus:outline-none focus:border-blue-400"
             />
-            <div className="text-[10px] text-slate-400 mt-0.5">DeepSeek 預設 deepseek-chat；OpenRouter 預設 deepseek/deepseek-chat；Qwen 預設 qwen-plus；Sakana 預設 sakana-ai；Gemini 預設 gemini-2.0-flash；Ollama 預設 qwen2.5:7b</div>
+            <div className="text-[10px] text-slate-400 mt-0.5">
+              DeepSeek 預設 deepseek-chat；OpenRouter 預設 deepseek/deepseek-chat；Qwen 預設
+              qwen3-max-preview；Sakana 預設 fugu；Gemini 預設 gemini-2.5-flash；Ollama 預設
+              qwen2.5:7b
+            </div>
           </div>
 
           <div className="text-[10px] bg-amber-50 border border-amber-200 text-amber-700 rounded-xl p-3">
-            金鑰僅儲存在瀏覽器 localStorage（本機），不會上傳。切換提供者後「AI 改寫建議」會自動使用對應金鑰。未設定金鑰時自動回退本地模擬。
+            金鑰僅儲存在瀏覽器 localStorage（本機），不會上傳。切換提供者後「AI
+            改寫建議」會自動使用對應金鑰。未設定金鑰時自動回退本地模擬。
           </div>
         </div>
 
         <div className="bg-slate-50 px-6 py-3 text-xs flex justify-end gap-x-3 border-t shrink-0">
           <button
+            type="button"
             onClick={() => {
               onClear();
               onClose();
@@ -193,6 +271,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
             清除全部
           </button>
           <button
+            type="button"
             onClick={() => {
               onSave(draft);
               onClose();

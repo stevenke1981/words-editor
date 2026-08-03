@@ -1,0 +1,25 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Default capabilities for words-editor",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "fs:default",
+    {
+      "identifier": "http:default",
+      "allow": [
+        { "url": "https://api.deepseek.com/**" },
+        { "url": "https://openrouter.ai/**" },
+        { "url": "http://localhost:11434/**" },
+        { "url": "https://token-plan.ap-southeast-1.maas.aliyuncs.com/**" },
+        { "url": "https://api.sakana.ai/**" },
+        { "url": "https://generativelanguage.googleapis.com/**" }
+      ]
+    },
+    "http:allow-fetch",
+    "http:allow-fetch-cancel",
+    "http:allow-fetch-read-body",
+    "http:allow-fetch-send"
+  ]
+}

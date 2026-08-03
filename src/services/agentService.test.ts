@@ -1,12 +1,12 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
+  type PipelineConfig,
+  STAGE_DEFINITIONS,
+  localizeApiError,
+  parseVisualizerOutput,
   runAgentPipeline,
   runSingleStage,
-  parseVisualizerOutput,
   sanitizeUserContent,
-  localizeApiError,
-  STAGE_DEFINITIONS,
-  type PipelineConfig,
 } from './agentService';
 
 // --- Mock fetch setup ---
@@ -68,7 +68,14 @@ describe('agentService', () => {
     it('should define exactly 6 stages in correct order', () => {
       expect(STAGE_DEFINITIONS).toHaveLength(6);
       const names = STAGE_DEFINITIONS.map((s) => s.name);
-      expect(names).toEqual(['architect', 'research', 'writer', 'editor', 'reviewer', 'visualizer']);
+      expect(names).toEqual([
+        'architect',
+        'research',
+        'writer',
+        'editor',
+        'reviewer',
+        'visualizer',
+      ]);
     });
 
     it('each stage should have a label and promptTemplate', () => {
@@ -347,7 +354,7 @@ describe('agentService', () => {
 
       const result = await runAgentPipeline(
         '這是一個足夠長的寫作任務輸入',
-        'sk-test-api-key-1234567890'
+        'sk-test-api-key-1234567890',
       );
 
       expect(mockFetch).toHaveBeenCalled();
@@ -363,7 +370,7 @@ describe('agentService', () => {
         '這是一個足夠長的寫作任務輸入',
         'sk-test-api-key-1234567890',
         undefined,
-        'deepseek-reasoner'
+        'deepseek-reasoner',
       );
 
       const callBody = JSON.parse(mockFetch.mock.calls[0][1].body);
@@ -390,7 +397,7 @@ describe('agentService', () => {
 
       const editorStage = result.stages.find((s) => s.name === 'editor' && s.result);
       expect(editorStage).toBeDefined();
-      expect(editorStage!.result).toBe('各階段輸出');
+      expect(editorStage?.result).toBe('各階段輸出');
     });
   });
 

@@ -1,16 +1,25 @@
-import { useState, useCallback, useEffect, useMemo } from 'react';
-import type { Chapter, KnowledgeNode } from './types';
-import { getTemplate, createBookFromTemplate, DEFAULT_TEMPLATE_ID } from './data/templates';
-import { exportToWord, exportToPdf } from './services/exportService';
-import { useBook } from './hooks/useBook';
-import { useAgentPipeline } from './hooks/useAgentPipeline';
-import TopBar from './components/TopBar';
-import LeftSidebar from './components/LeftSidebar';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import EditorPanel from './components/EditorPanel';
+import LeftSidebar from './components/LeftSidebar';
 import RightSidebar from './components/RightSidebar';
-import TemplatePickerModal from './components/modals/TemplatePickerModal';
-import SettingsModal from './components/modals/SettingsModal';
+import TopBar from './components/TopBar';
+import AgentResultModal from './components/modals/AgentResultModal';
 import GraphModal from './components/modals/GraphModal';
+import SettingsModal from './components/modals/SettingsModal';
+import TemplatePickerModal from './components/modals/TemplatePickerModal';
+import { DEFAULT_TEMPLATE_ID, createBookFromTemplate, getTemplate } from './data/templates';
+import { useAgentPipeline } from './hooks/useAgentPipeline';
+import { useBook } from './hooks/useBook';
+import type { AgentStageName } from './services/agentService';
+import { calculateEditMetrics } from './services/editMetrics';
+import {
+  exportFullBookToPdfBrowser,
+  exportFullBookToWord,
+  exportToMarkdown,
+  exportToPdfBrowser,
+  exportToWord,
+} from './services/exportService';
+import type { Chapter, KnowledgeNode } from './types';
 
 /**
  * words-editor — multi-genre article / book writing UI
@@ -24,6 +33,8 @@ function App() {
   const {
     book,
     setBook,
+    storageStatus,
+    flushSave,
     currentChapter,
     currentChapterId,
     switchChapter,
@@ -54,6 +65,10 @@ function App() {
   const [isTemplateOpen, setIsTemplateOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [lastSavedMsg, setLastSavedMsg] = useState('');
+  const [agentResult, setAgentResult] = useState<{
+    stage: AgentStageName;
+    content: string;
+  } | null>(null);
 
   const activeTemplate = useMemo(() => getTemplate(book.templateId), [book.templateId]);
 
@@ -74,23 +89,30 @@ function App() {
 
   // Editor input handler
   const handleEditorInput = useCallback(
-    (html: string) => {
-      const text = html
-        .replace(/<br\s*\/?>/gi, '\n')
-        .replace(/<div>/gi, '\n')
-        .replace(/<\/div>/gi, '')
-        .replace(/<[^>]+>/g, '');
-
+    (text: string) => {
       const stats = computeStats(text);
+      const editMetrics = calculateEditMetrics(currentChapter.content, text);
       updateChapter(currentChapterId, {
         content: text,
         wordCount: stats.total,
-        rewrite: Math.min(100, Math.max(currentChapter.rewrite, Math.floor(stats.total * 0.03))),
-        retention: Math.max(70, currentChapter.retention - 1),
+        added: currentChapter.added + editMetrics.added,
+        deleted: currentChapter.deleted + editMetrics.deleted,
+        rewrite: Math.max(currentChapter.rewrite, editMetrics.rewritePercent),
+        retention: Math.min(currentChapter.retention, editMetrics.retentionPercent),
       });
       flash('已自動儲存', 1400);
     },
-    [currentChapterId, currentChapter.rewrite, currentChapter.retention, updateChapter, computeStats, flash]
+    [
+      currentChapterId,
+      currentChapter.content,
+      currentChapter.added,
+      currentChapter.deleted,
+      currentChapter.rewrite,
+      currentChapter.retention,
+      updateChapter,
+      computeStats,
+      flash,
+    ],
   );
 
   // Title change
@@ -98,43 +120,71 @@ function App() {
     (title: string) => {
       updateChapter(currentChapterId, { title });
     },
-    [currentChapterId, updateChapter]
+    [currentChapterId, updateChapter],
+  );
+
+  const applyAIContent = useCallback(
+    (newContent: string) => {
+      const stats = computeStats(newContent);
+      const editMetrics = calculateEditMetrics(currentChapter.content, newContent);
+      updateChapter(currentChapterId, {
+        content: newContent,
+        wordCount: stats.total,
+        added: currentChapter.added + editMetrics.added,
+        deleted: currentChapter.deleted + editMetrics.deleted,
+        rewrite: Math.max(currentChapter.rewrite, editMetrics.rewritePercent),
+        retention: Math.min(currentChapter.retention, editMetrics.retentionPercent),
+      });
+    },
+    [computeStats, currentChapter, currentChapterId, updateChapter],
+  );
+
+  const runAgentStage = useCallback(
+    async (stage: AgentStageName | 'full') => {
+      if (!currentChapter.content || !currentChapter.content.trim()) {
+        flash('請先輸入章節內容');
+        return;
+      }
+
+      const genre = book.genre || activeTemplate.genre;
+      const output = await runRewrite(
+        currentChapter.content,
+        genre,
+        activeTemplate.themeHint,
+        book.title,
+        currentChapter.title,
+        stage,
+      );
+      if (!output) return;
+
+      if (stage === 'full' || stage === 'editor' || stage === 'writer') {
+        applyAIContent(output);
+        return;
+      }
+
+      setAgentResult({ stage, content: output });
+    },
+    [activeTemplate, applyAIContent, book, currentChapter, flash, runRewrite],
   );
 
   // AI rewrite
   const handleAIRewrite = useCallback(async () => {
-    if (!currentChapter.content || !currentChapter.content.trim()) {
-      flash('請先輸入章節內容');
-      return;
-    }
+    await runAgentStage('full');
+  }, [runAgentStage]);
 
-    const genre = book.genre || activeTemplate.genre;
-    const newContent = await runRewrite(
-      currentChapter.content,
-      genre,
-      activeTemplate.themeHint,
-      book.title,
-      currentChapter.title
-    );
-
-    if (newContent) {
-      const stats = computeStats(newContent);
-      const isReal = hasApiKeyConfigured();
-      updateChapter(currentChapterId, {
-        content: newContent,
-        wordCount: stats.total,
-        rewrite: Math.min(100, currentChapter.rewrite + (isReal ? 22 : 18)),
-        retention: Math.max(isReal ? 55 : 65, currentChapter.retention - (isReal ? 6 : 8)),
-      });
-    }
-  }, [currentChapter, book, activeTemplate, runRewrite, computeStats, updateChapter, currentChapterId, hasApiKeyConfigured, flash]);
+  const handleAIStage = useCallback(
+    (stage: AgentStageName) => {
+      void runAgentStage(stage);
+    },
+    [runAgentStage],
+  );
 
   // Status change
   const handleStatusChange = useCallback(
     (newStatus: Chapter['status']) => {
       updateChapter(currentChapterId, { status: newStatus });
     },
-    [currentChapterId, updateChapter]
+    [currentChapterId, updateChapter],
   );
 
   // Knowledge graph node click
@@ -142,14 +192,14 @@ function App() {
     (node: KnowledgeNode) => {
       setSelectedConcept(node.label);
       const related = book.chapters.filter(
-        (ch) => ch.title.includes(node.label) || ch.content.includes(node.label.substring(0, 3))
+        (ch) => ch.title.includes(node.label) || ch.content.includes(node.label.substring(0, 3)),
       );
       if (related.length > 0 && related[0].id !== currentChapterId) {
         setTimeout(() => switchChapter(related[0].id), 180);
       }
       setTimeout(() => setSelectedConcept(null), 3200);
     },
-    [book.chapters, currentChapterId, switchChapter]
+    [book.chapters, currentChapterId, switchChapter],
   );
 
   // Add concept node
@@ -202,7 +252,7 @@ function App() {
         flash('匯入失敗：JSON 格式無效', 2000);
       }
     },
-    [importBook, flash]
+    [importBook, flash],
   );
 
   // Export Word
@@ -220,7 +270,7 @@ function App() {
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      window.setTimeout(() => URL.revokeObjectURL(url), 1000);
       flash('已匯出 Word', 1600);
     } catch (err) {
       console.error('Word export error:', err);
@@ -229,13 +279,17 @@ function App() {
   }, [currentChapter, book.title, flash]);
 
   // Export PDF
-  const handleExportPDF = useCallback(() => {
+  const handleExportPDF = useCallback(async () => {
     if (!currentChapter.content || !currentChapter.content.trim()) {
       flash('請先輸入章節內容');
       return;
     }
     try {
-      const blob = exportToPdf(currentChapter.title, currentChapter.content, book.title);
+      const blob = await exportToPdfBrowser(
+        currentChapter.title,
+        currentChapter.content,
+        book.title,
+      );
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -243,13 +297,61 @@ function App() {
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      window.setTimeout(() => URL.revokeObjectURL(url), 1000);
       flash('已匯出 PDF', 1600);
     } catch (err) {
       console.error('PDF export error:', err);
       flash('匯出 PDF 失敗');
     }
   }, [currentChapter, book.title, flash]);
+
+  const downloadBlob = useCallback(
+    (blob: Blob, filename: string, message: string) => {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+      flash(message, 1600);
+    },
+    [flash],
+  );
+
+  const handleExportFullBookWord = useCallback(async () => {
+    try {
+      const blob = await exportFullBookToWord(book);
+      downloadBlob(
+        blob,
+        `${book.title.replace(/[\\/:*?"<>|]/g, '_')}_全書.docx`,
+        '已匯出全書 Word',
+      );
+    } catch (err) {
+      console.error('Full-book Word export error:', err);
+      flash('匯出全書 Word 失敗');
+    }
+  }, [book, downloadBlob, flash]);
+
+  const handleExportFullBookPdf = useCallback(async () => {
+    try {
+      const blob = await exportFullBookToPdfBrowser(book);
+      downloadBlob(blob, `${book.title.replace(/[\\/:*?"<>|]/g, '_')}_全書.pdf`, '已匯出全書 PDF');
+    } catch (err) {
+      console.error('Full-book PDF export error:', err);
+      flash('匯出全書 PDF 失敗');
+    }
+  }, [book, downloadBlob, flash]);
+
+  const handleExportMarkdown = useCallback(() => {
+    const markdown = exportToMarkdown(book);
+    downloadBlob(
+      new Blob([markdown], { type: 'text/markdown;charset=utf-8' }),
+      `${book.title.replace(/[\\/:*?"<>|]/g, '_')}.md`,
+      '已匯出 Markdown',
+    );
+  }, [book, downloadBlob]);
 
   // Apply template
   const handleApplyTemplate = useCallback(
@@ -258,7 +360,7 @@ function App() {
       setIsTemplateOpen(false);
       flash(`已套用模板：${getTemplate(templateId).name}`, 2000);
     },
-    [applyTemplate, flash]
+    [applyTemplate, flash],
   );
 
   // Reset graph layout
@@ -272,12 +374,13 @@ function App() {
     const onKey = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
         e.preventDefault();
+        flushSave();
         flash('已手動儲存', 900);
       }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [flash]);
+  }, [flash, flushSave]);
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 font-sans-tc">
@@ -285,11 +388,15 @@ function App() {
         bookTitle={book.title}
         genre={book.genre || activeTemplate.genre}
         templateIcon={activeTemplate.icon}
+        storageStatus={storageStatus}
         onRename={handleRename}
         onOpenTemplate={() => setIsTemplateOpen(true)}
         onExportJSON={handleExportJSON}
         onExportWord={handleExportWord}
         onExportPDF={handleExportPDF}
+        onExportFullBookWord={handleExportFullBookWord}
+        onExportFullBookPdf={handleExportFullBookPdf}
+        onExportMarkdown={handleExportMarkdown}
         onImportJSON={handleImportJSON}
         onOpenSettings={() => setIsSettingsOpen(true)}
         onOpenGraph={() => setIsGraphModalOpen(true)}
@@ -325,6 +432,7 @@ function App() {
             onEditorInput={handleEditorInput}
             onTitleChange={handleTitleChange}
             onAIRewrite={handleAIRewrite}
+            onAIStage={handleAIStage}
           />
 
           <RightSidebar
@@ -361,6 +469,13 @@ function App() {
         onSave={saveSettings}
         onClear={clearSettings}
         onReload={reloadSettings}
+      />
+
+      <AgentResultModal
+        isOpen={agentResult !== null}
+        stage={agentResult?.stage || 'visualizer'}
+        content={agentResult?.content || ''}
+        onClose={() => setAgentResult(null)}
       />
 
       {/* Footer */}

@@ -7,7 +7,7 @@
 }
 
 body {
-  font-family: 'Noto Sans TC', 'Inter', system-ui, -apple-system, sans-serif;
+  font-family: "Noto Sans TC", "Inter", system-ui, -apple-system, sans-serif;
 }
 
 .app-container {
@@ -47,9 +47,8 @@ body {
 }
 
 .knowledge-node.selected {
-  ring: 2px;
-  ring-offset: 2px;
-  ring-color: #3b82f6;
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
 }
 
 .chapter-item {

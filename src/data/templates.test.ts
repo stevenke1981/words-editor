@@ -1,9 +1,9 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import {
-  listTemplates,
-  getTemplate,
-  createBookFromTemplate,
   DEFAULT_TEMPLATE_ID,
+  createBookFromTemplate,
+  getTemplate,
+  listTemplates,
 } from './templates';
 
 describe('writing templates', () => {

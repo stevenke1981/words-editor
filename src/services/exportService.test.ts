@@ -4,16 +4,16 @@
  * Co-Authored-By: Qwen Code (tests)
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import type { Book } from '../types';
 import {
-  exportToWord,
-  exportToPdf,
-  exportFullBookToWord,
-  exportFullBookToPdf,
-  exportToMarkdown,
-  exportChapterToMarkdown,
   containsCJK,
+  exportChapterToMarkdown,
+  exportFullBookToPdf,
+  exportFullBookToWord,
+  exportToMarkdown,
+  exportToPdf,
+  exportToWord,
 } from './exportService';
 
 // ---------------------------------------------------------------------------
@@ -151,7 +151,9 @@ describe('exportToPdf', () => {
   });
 
   it('handles very long content with pagination', () => {
-    const longContent = Array.from({ length: 200 }, (_, i) => `Line ${i + 1}: Some text.`).join('\n');
+    const longContent = Array.from({ length: 200 }, (_, i) => `Line ${i + 1}: Some text.`).join(
+      '\n',
+    );
     const blob = exportToPdf('Long Chapter', longContent, 'Big Book');
     expect(blob).toBeInstanceOf(Blob);
     expect(blob.size).toBeGreaterThan(0);

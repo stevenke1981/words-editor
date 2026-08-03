@@ -1,10 +1,10 @@
 {
   "productName": "words-editor",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "identifier": "com.wordseditor.app",
   "build": {
-"beforeDevCommand": "npm run dev",
-"beforeBuildCommand": "npm run build",
+    "beforeDevCommand": "npm run dev",
+    "beforeBuildCommand": "npm run build",
     "devUrl": "http://localhost:1420",
     "frontendDist": "../dist"
   },
@@ -18,7 +18,7 @@
       }
     ],
     "security": {
-      "csp": null
+      "csp": "default-src 'self'; connect-src 'self' http://localhost:11434 https://api.deepseek.com https://openrouter.ai https://token-plan.ap-southeast-1.maas.aliyuncs.com https://api.sakana.ai https://generativelanguage.googleapis.com; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; script-src 'self' 'wasm-unsafe-eval'"
     }
   },
   "bundle": {
